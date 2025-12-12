@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server"
-import { dataStore } from "@/lib/store"
+import { updateAttendanceInDB, deleteAttendanceFromDB } from "@/lib/attendance-db"
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const data = await request.json()
-  const updated = dataStore.updateAttendance(id, data)
+  const updated = await updateAttendanceInDB(id, data)
   if (!updated) {
     return NextResponse.json({ error: "Not found" }, { status: 404 })
   }
@@ -13,7 +13,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const deleted = dataStore.deleteAttendance(id)
+  const deleted = await deleteAttendanceFromDB(id)
   if (!deleted) {
     return NextResponse.json({ error: "Not found" }, { status: 404 })
   }

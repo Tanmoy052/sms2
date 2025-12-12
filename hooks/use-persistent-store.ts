@@ -9,7 +9,11 @@ const studentsFetcher = () => persistentStore.getStudents()
 const teachersFetcher = () => persistentStore.getTeachers()
 const noticesFetcher = () => persistentStore.getNotices()
 const projectsFetcher = () => persistentStore.getProjects()
-const attendanceFetcher = () => persistentStore.getAttendance()
+const attendanceFetcher = async () => {
+  const response = await fetch('/api/attendance')
+  if (!response.ok) throw new Error('Failed to fetch attendance')
+  return response.json()
+}
 const statsFetcher = () => persistentStore.getStats()
 
 export function useStudents() {
@@ -140,7 +144,13 @@ export function useAttendance() {
     isError: error,
     mutate,
     addAttendance: async (attendance: Omit<Attendance, "id" | "createdAt">) => {
-      const newAttendance = persistentStore.addAttendance(attendance)
+      const response = await fetch('/api/attendance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(attendance),
+      })
+      if (!response.ok) throw new Error('Failed to add attendance')
+      const newAttendance = await response.json()
       await mutate()
       return newAttendance
     },
@@ -151,19 +161,34 @@ export function useAttendance() {
       subject: string,
       markedBy: string,
     ) => {
-      const result = persistentStore.upsertAttendance(studentId, date, status, subject, markedBy)
+      const response = await fetch('/api/attendance/upsert', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ studentId, date, status, subject, markedBy }),
+      })
+      if (!response.ok) throw new Error('Failed to upsert attendance')
+      const result = await response.json()
       await mutate()
       return result
     },
     updateAttendance: async (id: string, data: Partial<Attendance>) => {
-      const updated = persistentStore.updateAttendance(id, data)
+      const response = await fetch(`/api/attendance/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      })
+      if (!response.ok) throw new Error('Failed to update attendance')
+      const updated = await response.json()
       await mutate()
       return updated
     },
     deleteAttendance: async (id: string) => {
-      const result = persistentStore.deleteAttendance(id)
+      const response = await fetch(`/api/attendance/${id}`, {
+        method: 'DELETE',
+      })
+      if (!response.ok) throw new Error('Failed to delete attendance')
       await mutate()
-      return result
+      return true
     },
   }
 }

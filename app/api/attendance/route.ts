@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { persistentStore } from "@/lib/persistent-store"
+import { getAttendanceFromDB, addAttendanceToDB } from "@/lib/attendance-db"
 
 export async function GET(request: Request) {
   const url = new URL(request.url)
@@ -7,9 +7,8 @@ export async function GET(request: Request) {
   const studentId = search.get("studentId")
   const date = search.get("date")
   const subject = search.get("subject")
-  const department = search.get("department")
 
-  let attendance = persistentStore.getAttendance()
+  let attendance = await getAttendanceFromDB()
 
   if (studentId) {
     attendance = attendance.filter((a) => a.studentId === studentId)
@@ -20,16 +19,12 @@ export async function GET(request: Request) {
   if (subject) {
     attendance = attendance.filter((a) => a.subject === subject)
   }
-  if (department) {
-    const ids = persistentStore.getStudentsByDepartment(department).map((s) => s.id)
-    attendance = attendance.filter((a) => ids.includes(a.studentId))
-  }
 
   return NextResponse.json(attendance)
 }
 
 export async function POST(request: Request) {
   const data = await request.json()
-  const newRecord = persistentStore.addAttendance(data)
+  const newRecord = await addAttendanceToDB(data)
   return NextResponse.json(newRecord)
 }
