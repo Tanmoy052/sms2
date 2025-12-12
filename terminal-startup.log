@@ -1,0 +1,82 @@
+> studentmanagementsystem2@1.0.0 dev
+> next dev
+
+   ▲ Next.js 16.0.8 (Turbopack)
+   - Local:         http://localhost:3000
+   - Network:       http://192.168.1.13:3000
+
+ ✓ Starting...
+C:\Users\tanmo\Downloads\studentmanagementsystem2_new\node_modules\next\dist\lib\find-pages-dir
+.js: Invalid source map. Only conformant source maps can be used to find the original code. Cau
+se: Error: sourceMapURL could not be parsed
+C:\Users\tanmo\Downloads\studentmanagementsystem2_new\node_modules\next\dist\server\lib\router-
+server.js: Invalid source map. Only conformant source maps can be used to find the original cod
+e. Cause: Error: sourceMapURL could not be parsed
+C:\Users\tanmo\Downloads\studentmanagementsystem2_new\node_modules\next\dist\server\lib\start-s
+erver.js: Invalid source map. Only conformant source maps can be used to find the original code
+. Cause: Error: sourceMapURL could not be parsed
+Error: > Couldn't find any `pages` or `app` directory. Please create one under the project root
+    at ignore-listed frames
+
+PS C:\Users\tanmo\Downloads\studentmanagementsystem2_new>
+ *  History restored
+
+PS C:\Users\tanmo\Downloads\studentmanagementsystem2_new>
+ *  History restored
+
+PS C:\Users\tanmo\Downloads\studentmanagementsystem2_new> npm install
+
+up to date, audited 338 packages in 2s
+
+136 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+PS C:\Users\tanmo\Downloads\studentmanagementsystem2_new> npm run dev
+
+> studentmanagementsystem2@1.0.0 dev
+> next dev
+
+   ▲ Next.js 16.0.8 (Turbopack)
+   - Local:         http://localhost:3000
+   - Network:       http://192.168.1.13:3000
+
+ ✓ Starting...
+C:\Users\tanmo\Downloads\studentmanagementsystem2_new\node_modules\next\dist\lib\find-pages-dir
+.js: Invalid source map. Only conformant source maps can be used to find the original code. Cau
+se: Error: sourceMapURL could not be parsed
+C:\Users\tanmo\Downloads\studentmanagementsystem2_new\node_modules\next\dist\server\lib\router-
+server.js: Invalid source map. Only conformant source maps can be used to find the original cod
+e. Cause: Error: sourceMapURL could not be parsed
+C:\Users\tanmo\Downloads\studentmanagementsystem2ource map. Only conformant source maps can be 
+usersed
+Error: > Couldn't find any `pages` or `app` directory. Please create one under the project root
+
+    at ignore-listed frames
+
+PS C:\Users\tanmo\Downloads\studentmanagementsystem2_new>
+ *  History restored
+
+PS C:\Users\tanmo\Downloads\studentmanagementsystem2_new> npm install
+npm error code ENOENT
+npm error syscall open
+npm error path C:\Users\tanmo\Downloads\studentmanagementsystem2_new\package.json
+npm error errno -4058
+npm error enoent Could not read package.json: Error: ENOENT: no such file or directory, open 'C
+:\Users\tanmo\Downloads\studentmanagementsystem2_new\package.json'
+npm error enoent This is related to npm not being able to find a file.
+npm error enoent
+npm error A complete log of this run can be found in: C:\Users\tanmo\AppData\Local\npm-cache\_l
+ogs\2025-12-10T07_29_56_175Z-debug-0.log
+PS C:\Users\tanmo\Downloads\studentmanagementsystem2_new> npm install
+npm error code ENOENT
+npm error syscall open
+npm error path C:\Users\tanmo\Downloads\studentmanagementsystem2_new\package.json
+npm error errno -4058
+npm error enoent Could not read package.json: Error: ENOENT: no such file or directory, open 'C
+:\Users\tanmo\Downloads\studentmanagementsystem2_new\package.json'
+npm error enoent This is related to npm not being able to find a file.
+npm error enoent
+npm error A complete log of this run can be found in: C:\Users\tanmo\AppData\Local\npm-cache\_l
+ogs\2025-12-10T07_30_49_020Z-debug-0.log
+PS C:\Users\tanmo\Downloads\studentmanagementsystem2_new>

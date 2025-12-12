@@ -1,0 +1,15 @@
+<svg width="180" height="180" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    @media (prefers-color-scheme: light) {
+      .bg { fill: #0f172a; }
+      .fg { fill: #ffffff; }
+    }
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #ffffff; }
+      .fg { fill: #0f172a; }
+    }
+  </style>
+  <rect class="bg" x="0" y="0" width="180" height="180" rx="32" />
+  <circle cx="90" cy="90" r="56" class="fg" />
+  <text x="90" y="98" text-anchor="middle" font-family="system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif" font-size="36" font-weight="700" class="bg">CGEC</text>
+</svg>
