@@ -8,7 +8,6 @@ export async function getAttendanceFromDB(): Promise<Attendance[]> {
     const attendance = await db.collection("attendance").find({}).toArray();
     return attendance.map((item) => ({
       ...item,
-      _id: item._id.toString(),
       id: item._id.toString(),
     })) as Attendance[];
   } catch (error) {
@@ -53,7 +52,6 @@ export async function updateAttendanceInDB(
     if (result) {
       return {
         ...result,
-        _id: result._id.toString(),
         id: result._id.toString(),
       } as Attendance;
     }
@@ -95,7 +93,6 @@ export async function upsertAttendanceInDB(
       if (result) {
         return {
           ...result,
-          _id: result._id.toString(),
           id: result._id.toString(),
         } as Attendance
       }

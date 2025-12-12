@@ -25,6 +25,7 @@ export interface Attendance {
   subject: string
   markedBy: string // teacher id
   createdAt: string
+  updatedAt: string
 }
 
 export interface Teacher {
