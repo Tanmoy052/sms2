@@ -1,4 +1,12 @@
-import type { Student, Teacher, Notice, Project, Attendance, Admin, TeacherCredentials } from "./types"
+import type {
+  Student,
+  Teacher,
+  Notice,
+  Project,
+  Attendance,
+  Admin,
+  TeacherCredentials,
+} from "./types";
 
 // Storage keys
 const STORAGE_KEYS = {
@@ -9,7 +17,7 @@ const STORAGE_KEYS = {
   attendance: "cgec_attendance",
   teacherCredentials: "cgec_teacher_credentials",
   initialized: "cgec_initialized",
-} as const
+} as const;
 
 // Admin credentials (static - configured by system)
 export const ADMIN_CREDENTIALS: Admin[] = [
@@ -20,7 +28,7 @@ export const ADMIN_CREDENTIALS: Admin[] = [
     name: "System Administrator",
     role: "super-admin",
   },
-]
+];
 
 // Default teacher credentials
 const DEFAULT_TEACHER_CREDENTIALS: TeacherCredentials[] = [
@@ -29,7 +37,7 @@ const DEFAULT_TEACHER_CREDENTIALS: TeacherCredentials[] = [
   { id: "3", teacherId: "3", username: "rajesh.singh", password: "teacher123" },
   { id: "4", teacherId: "4", username: "priya.das", password: "teacher123" },
   { id: "5", teacherId: "5", username: "sunil.mondal", password: "teacher123" },
-]
+];
 
 // Default data with more students per department
 const DEFAULT_STUDENTS: Student[] = [
@@ -208,7 +216,7 @@ const DEFAULT_STUDENTS: Student[] = [
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
-]
+];
 
 const DEFAULT_TEACHERS: Teacher[] = [
   {
@@ -286,25 +294,27 @@ const DEFAULT_TEACHERS: Teacher[] = [
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
-]
+];
 
 const DEFAULT_NOTICES: Notice[] = [
   {
     id: "1",
     title: "Mid-Semester Examination Schedule",
-    content: "Mid-semester examinations for all departments will commence from March 15, 2024.",
+    content:
+      "Mid-semester examinations for all departments will commence from March 15, 2024.",
     category: "exam",
     publishedAt: new Date().toISOString(),
     expiresAt: null,
     isActive: true,
   },
-]
+];
 
 const DEFAULT_PROJECTS: Project[] = [
   {
     id: "1",
     title: "Smart Campus Management System",
-    description: "An IoT-based system for managing campus resources efficiently.",
+    description:
+      "An IoT-based system for managing campus resources efficiently.",
     studentIds: ["1"],
     studentNames: ["Rahul Sharma"],
     technologies: ["React", "Node.js", "IoT", "MongoDB"],
@@ -314,58 +324,58 @@ const DEFAULT_PROJECTS: Project[] = [
     githubUrl: "https://github.com/example/smart-campus",
     websiteUrl: "https://smart-campus.example.com",
   },
-]
+];
 
 let memoryCache: {
-  students?: Student[]
-  teachers?: Teacher[]
-  notices?: Notice[]
-  projects?: Project[]
-  attendance?: Attendance[]
-  teacherCredentials?: TeacherCredentials[]
-  lastUpdate: number
-} = { lastUpdate: 0 }
+  students?: Student[];
+  teachers?: Teacher[];
+  notices?: Notice[];
+  projects?: Project[];
+  attendance?: Attendance[];
+  teacherCredentials?: TeacherCredentials[];
+  lastUpdate: number;
+} = { lastUpdate: 0 };
 
-const CACHE_TTL = 1000 // 1 second cache
+const CACHE_TTL = 1000; // 1 second cache
 
 function invalidateCache() {
-  memoryCache = { lastUpdate: 0 }
+  memoryCache = { lastUpdate: 0 };
 }
 
 // Helper to safely access localStorage (only on client)
 function getFromStorage<T>(key: string, defaultValue: T): T {
-  if (typeof window === "undefined") return defaultValue
+  if (typeof window === "undefined") return defaultValue;
   try {
-    const stored = localStorage.getItem(key)
-    return stored ? JSON.parse(stored) : defaultValue
+    const stored = localStorage.getItem(key);
+    return stored ? JSON.parse(stored) : defaultValue;
   } catch {
-    return defaultValue
+    return defaultValue;
   }
 }
 
 function setToStorage<T>(key: string, value: T): void {
-  if (typeof window === "undefined") return
+  if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(key, JSON.stringify(value))
-    invalidateCache()
+    localStorage.setItem(key, JSON.stringify(value));
+    invalidateCache();
   } catch (e) {
-    console.error("Failed to save to localStorage:", e)
+    console.error("Failed to save to localStorage:", e);
   }
 }
 
 // Initialize storage with default data if not exists
 function initializeStorage(): void {
-  if (typeof window === "undefined") return
+  if (typeof window === "undefined") return;
 
-  const initialized = localStorage.getItem(STORAGE_KEYS.initialized)
+  const initialized = localStorage.getItem(STORAGE_KEYS.initialized);
   if (!initialized) {
-    setToStorage(STORAGE_KEYS.students, DEFAULT_STUDENTS)
-    setToStorage(STORAGE_KEYS.teachers, DEFAULT_TEACHERS)
-    setToStorage(STORAGE_KEYS.notices, DEFAULT_NOTICES)
-    setToStorage(STORAGE_KEYS.projects, DEFAULT_PROJECTS)
-    setToStorage(STORAGE_KEYS.attendance, [])
-    setToStorage(STORAGE_KEYS.teacherCredentials, DEFAULT_TEACHER_CREDENTIALS)
-    localStorage.setItem(STORAGE_KEYS.initialized, "true")
+    setToStorage(STORAGE_KEYS.students, DEFAULT_STUDENTS);
+    setToStorage(STORAGE_KEYS.teachers, DEFAULT_TEACHERS);
+    setToStorage(STORAGE_KEYS.notices, DEFAULT_NOTICES);
+    setToStorage(STORAGE_KEYS.projects, DEFAULT_PROJECTS);
+    setToStorage(STORAGE_KEYS.attendance, []);
+    setToStorage(STORAGE_KEYS.teacherCredentials, DEFAULT_TEACHER_CREDENTIALS);
+    localStorage.setItem(STORAGE_KEYS.initialized, "true");
   }
 }
 
@@ -374,307 +384,346 @@ function generateUsername(name: string): string {
     .toLowerCase()
     .replace(/^(dr\.|prof\.|mr\.|mrs\.|ms\.)\s*/i, "")
     .trim()
-    .replace(/\s+/g, ".")
+    .replace(/\s+/g, ".");
 }
 
 // Persistent Data Store Class
 class PersistentDataStore {
-  private isInitialized = false
+  private isInitialized = false;
 
   private ensureInitialized() {
     if (!this.isInitialized && typeof window !== "undefined") {
-      initializeStorage()
-      this.isInitialized = true
+      initializeStorage();
+      this.isInitialized = true;
     }
   }
 
   // Students - Added caching for faster reads
   getStudents(): Student[] {
-    this.ensureInitialized()
-    const now = Date.now()
+    this.ensureInitialized();
+    const now = Date.now();
     if (memoryCache.students && now - memoryCache.lastUpdate < CACHE_TTL) {
-      return memoryCache.students
+      return memoryCache.students;
     }
-    const students = getFromStorage<Student[]>(STORAGE_KEYS.students, DEFAULT_STUDENTS)
-    memoryCache.students = students
-    memoryCache.lastUpdate = now
-    return students
+    const students = getFromStorage<Student[]>(
+      STORAGE_KEYS.students,
+      DEFAULT_STUDENTS
+    );
+    memoryCache.students = students;
+    memoryCache.lastUpdate = now;
+    return students;
   }
 
   getStudentById(id: string): Student | undefined {
-    return this.getStudents().find((s) => s.id === id)
+    return this.getStudents().find((s) => s.id === id);
   }
 
   getStudentByRollNumber(rollNumber: string): Student | undefined {
-    return this.getStudents().find((s) => s.rollNumber === rollNumber)
+    return this.getStudents().find((s) => s.rollNumber === rollNumber);
   }
 
   getStudentsByDepartment(department: string): Student[] {
-    return this.getStudents().filter((s) => s.department === department && s.status === "active")
-  }
-
-  getStudentsByDepartmentAndSemester(department: string, semester: number): Student[] {
     return this.getStudents().filter(
-      (s) => s.department === department && s.semester === semester && s.status === "active",
-    )
+      (s) => s.department === department && s.status === "active"
+    );
   }
 
-  addStudent(student: Omit<Student, "id" | "createdAt" | "updatedAt">): Student {
-    const students = this.getStudents()
+  getStudentsByDepartmentAndSemester(
+    department: string,
+    semester: number
+  ): Student[] {
+    return this.getStudents().filter(
+      (s) =>
+        s.department === department &&
+        s.semester === semester &&
+        s.status === "active"
+    );
+  }
+
+  addStudent(
+    student: Omit<Student, "id" | "createdAt" | "updatedAt">
+  ): Student {
+    const students = this.getStudents();
     const newStudent: Student = {
       ...student,
       id: Date.now().toString(),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-    }
-    students.push(newStudent)
-    setToStorage(STORAGE_KEYS.students, students)
-    return newStudent
+    };
+    students.push(newStudent);
+    setToStorage(STORAGE_KEYS.students, students);
+    return newStudent;
   }
 
   updateStudent(id: string, data: Partial<Student>): Student | null {
-    const students = this.getStudents()
-    const index = students.findIndex((s) => s.id === id)
+    const students = this.getStudents();
+    const index = students.findIndex((s) => s.id === id);
     if (index !== -1) {
       students[index] = {
         ...students[index],
         ...data,
         updatedAt: new Date().toISOString(),
-      }
-      setToStorage(STORAGE_KEYS.students, students)
-      return students[index]
+      };
+      setToStorage(STORAGE_KEYS.students, students);
+      return students[index];
     }
-    return null
+    return null;
   }
 
   deleteStudent(id: string): boolean {
-    const students = this.getStudents()
-    const index = students.findIndex((s) => s.id === id)
+    const students = this.getStudents();
+    const index = students.findIndex((s) => s.id === id);
     if (index !== -1) {
-      students.splice(index, 1)
-      setToStorage(STORAGE_KEYS.students, students)
-      return true
+      students.splice(index, 1);
+      setToStorage(STORAGE_KEYS.students, students);
+      return true;
     }
-    return false
+    return false;
   }
 
   // Teachers - Added caching
   getTeachers(): Teacher[] {
-    this.ensureInitialized()
-    const now = Date.now()
+    this.ensureInitialized();
+    const now = Date.now();
     if (memoryCache.teachers && now - memoryCache.lastUpdate < CACHE_TTL) {
-      return memoryCache.teachers
+      return memoryCache.teachers;
     }
-    const teachers = getFromStorage<Teacher[]>(STORAGE_KEYS.teachers, DEFAULT_TEACHERS)
-    memoryCache.teachers = teachers
-    memoryCache.lastUpdate = now
-    return teachers
+    const teachers = getFromStorage<Teacher[]>(
+      STORAGE_KEYS.teachers,
+      DEFAULT_TEACHERS
+    );
+    memoryCache.teachers = teachers;
+    memoryCache.lastUpdate = now;
+    return teachers;
   }
 
   getTeacherById(id: string): Teacher | undefined {
-    return this.getTeachers().find((t) => t.id === id)
+    return this.getTeachers().find((t) => t.id === id);
   }
 
   getTeachersByDepartment(department: string): Teacher[] {
-    return this.getTeachers().filter((t) => t.department === department && t.status === "active")
+    return this.getTeachers().filter(
+      (t) => t.department === department && t.status === "active"
+    );
   }
 
-  addTeacher(teacher: Omit<Teacher, "id" | "createdAt" | "updatedAt">): Teacher {
-    const teachers = this.getTeachers()
+  addTeacher(
+    teacher: Omit<Teacher, "id" | "createdAt" | "updatedAt">
+  ): Teacher {
+    const teachers = this.getTeachers();
     const newTeacher: Teacher = {
       ...teacher,
       id: Date.now().toString(),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-    }
-    teachers.push(newTeacher)
-    setToStorage(STORAGE_KEYS.teachers, teachers)
+    };
+    teachers.push(newTeacher);
+    setToStorage(STORAGE_KEYS.teachers, teachers);
 
     // Auto-create credential for new teacher
-    const username = generateUsername(newTeacher.name)
+    const username = generateUsername(newTeacher.name);
     this.addTeacherCredential({
       teacherId: newTeacher.id,
       username,
       password: "teacher123",
-    })
+    });
 
-    return newTeacher
+    return newTeacher;
   }
 
   updateTeacher(id: string, data: Partial<Teacher>): Teacher | null {
-    const teachers = this.getTeachers()
-    const index = teachers.findIndex((t) => t.id === id)
+    const teachers = this.getTeachers();
+    const index = teachers.findIndex((t) => t.id === id);
     if (index !== -1) {
       teachers[index] = {
         ...teachers[index],
         ...data,
         updatedAt: new Date().toISOString(),
-      }
-      setToStorage(STORAGE_KEYS.teachers, teachers)
-      return teachers[index]
+      };
+      setToStorage(STORAGE_KEYS.teachers, teachers);
+      return teachers[index];
     }
-    return null
+    return null;
   }
 
   deleteTeacher(id: string): boolean {
-    const teachers = this.getTeachers()
-    const index = teachers.findIndex((t) => t.id === id)
+    const teachers = this.getTeachers();
+    const index = teachers.findIndex((t) => t.id === id);
     if (index !== -1) {
-      teachers.splice(index, 1)
-      setToStorage(STORAGE_KEYS.teachers, teachers)
+      teachers.splice(index, 1);
+      setToStorage(STORAGE_KEYS.teachers, teachers);
       // Also delete credential
-      const creds = this.getTeacherCredentials()
-      const credIndex = creds.findIndex((c) => c.teacherId === id)
+      const creds = this.getTeacherCredentials();
+      const credIndex = creds.findIndex((c) => c.teacherId === id);
       if (credIndex !== -1) {
-        creds.splice(credIndex, 1)
-        setToStorage(STORAGE_KEYS.teacherCredentials, creds)
+        creds.splice(credIndex, 1);
+        setToStorage(STORAGE_KEYS.teacherCredentials, creds);
       }
-      return true
+      return true;
     }
-    return false
+    return false;
   }
 
   // Teacher Credentials
   getTeacherCredentials(): TeacherCredentials[] {
-    this.ensureInitialized()
-    const now = Date.now()
-    if (memoryCache.teacherCredentials && now - memoryCache.lastUpdate < CACHE_TTL) {
-      return memoryCache.teacherCredentials
+    this.ensureInitialized();
+    const now = Date.now();
+    if (
+      memoryCache.teacherCredentials &&
+      now - memoryCache.lastUpdate < CACHE_TTL
+    ) {
+      return memoryCache.teacherCredentials;
     }
-    const creds = getFromStorage<TeacherCredentials[]>(STORAGE_KEYS.teacherCredentials, DEFAULT_TEACHER_CREDENTIALS)
-    memoryCache.teacherCredentials = creds
-    return creds
+    const creds = getFromStorage<TeacherCredentials[]>(
+      STORAGE_KEYS.teacherCredentials,
+      DEFAULT_TEACHER_CREDENTIALS
+    );
+    memoryCache.teacherCredentials = creds;
+    return creds;
   }
 
-  getTeacherCredentialByUsername(username: string): TeacherCredentials | undefined {
-    return this.getTeacherCredentials().find((c) => c.username === username)
+  getTeacherCredentialByUsername(
+    username: string
+  ): TeacherCredentials | undefined {
+    return this.getTeacherCredentials().find((c) => c.username === username);
   }
 
-  addTeacherCredential(cred: Omit<TeacherCredentials, "id">): TeacherCredentials {
-    const creds = this.getTeacherCredentials()
+  addTeacherCredential(
+    cred: Omit<TeacherCredentials, "id">
+  ): TeacherCredentials {
+    const creds = this.getTeacherCredentials();
     // Check if credential already exists for this teacher
-    const existing = creds.find((c) => c.teacherId === cred.teacherId)
-    if (existing) return existing
+    const existing = creds.find((c) => c.teacherId === cred.teacherId);
+    if (existing) return existing;
 
     const newCred: TeacherCredentials = {
       ...cred,
       id: Date.now().toString(),
-    }
-    creds.push(newCred)
-    setToStorage(STORAGE_KEYS.teacherCredentials, creds)
-    return newCred
+    };
+    creds.push(newCred);
+    setToStorage(STORAGE_KEYS.teacherCredentials, creds);
+    return newCred;
   }
 
   // Notices
   getNotices(): Notice[] {
-    this.ensureInitialized()
-    return getFromStorage<Notice[]>(STORAGE_KEYS.notices, DEFAULT_NOTICES)
+    this.ensureInitialized();
+    return getFromStorage<Notice[]>(STORAGE_KEYS.notices, DEFAULT_NOTICES);
   }
 
   addNotice(notice: Omit<Notice, "id">): Notice {
-    const notices = this.getNotices()
+    const notices = this.getNotices();
     const newNotice: Notice = {
       ...notice,
       id: Date.now().toString(),
-    }
-    notices.push(newNotice)
-    setToStorage(STORAGE_KEYS.notices, notices)
-    return newNotice
+    };
+    notices.push(newNotice);
+    setToStorage(STORAGE_KEYS.notices, notices);
+    return newNotice;
   }
 
   updateNotice(id: string, data: Partial<Notice>): Notice | null {
-    const notices = this.getNotices()
-    const index = notices.findIndex((n) => n.id === id)
+    const notices = this.getNotices();
+    const index = notices.findIndex((n) => n.id === id);
     if (index !== -1) {
-      notices[index] = { ...notices[index], ...data }
-      setToStorage(STORAGE_KEYS.notices, notices)
-      return notices[index]
+      notices[index] = { ...notices[index], ...data };
+      setToStorage(STORAGE_KEYS.notices, notices);
+      return notices[index];
     }
-    return null
+    return null;
   }
 
   deleteNotice(id: string): boolean {
-    const notices = this.getNotices()
-    const index = notices.findIndex((n) => n.id === id)
+    const notices = this.getNotices();
+    const index = notices.findIndex((n) => n.id === id);
     if (index !== -1) {
-      notices.splice(index, 1)
-      setToStorage(STORAGE_KEYS.notices, notices)
-      return true
+      notices.splice(index, 1);
+      setToStorage(STORAGE_KEYS.notices, notices);
+      return true;
     }
-    return false
+    return false;
   }
 
   // Projects
   getProjects(): Project[] {
-    this.ensureInitialized()
-    return getFromStorage<Project[]>(STORAGE_KEYS.projects, DEFAULT_PROJECTS)
+    this.ensureInitialized();
+    return getFromStorage<Project[]>(STORAGE_KEYS.projects, DEFAULT_PROJECTS);
   }
 
   addProject(project: Omit<Project, "id">): Project {
-    const projects = this.getProjects()
+    const projects = this.getProjects();
     const newProject: Project = {
       ...project,
       id: Date.now().toString(),
-    }
-    projects.push(newProject)
-    setToStorage(STORAGE_KEYS.projects, projects)
-    return newProject
+    };
+    projects.push(newProject);
+    setToStorage(STORAGE_KEYS.projects, projects);
+    return newProject;
   }
 
   updateProject(id: string, data: Partial<Project>): Project | null {
-    const projects = this.getProjects()
-    const index = projects.findIndex((p) => p.id === id)
+    const projects = this.getProjects();
+    const index = projects.findIndex((p) => p.id === id);
     if (index !== -1) {
-      projects[index] = { ...projects[index], ...data }
-      setToStorage(STORAGE_KEYS.projects, projects)
-      return projects[index]
+      projects[index] = { ...projects[index], ...data };
+      setToStorage(STORAGE_KEYS.projects, projects);
+      return projects[index];
     }
-    return null
+    return null;
   }
 
   deleteProject(id: string): boolean {
-    const projects = this.getProjects()
-    const index = projects.findIndex((p) => p.id === id)
+    const projects = this.getProjects();
+    const index = projects.findIndex((p) => p.id === id);
     if (index !== -1) {
-      projects.splice(index, 1)
-      setToStorage(STORAGE_KEYS.projects, projects)
-      return true
+      projects.splice(index, 1);
+      setToStorage(STORAGE_KEYS.projects, projects);
+      return true;
     }
-    return false
+    return false;
   }
 
   // Attendance
   getAttendance(): Attendance[] {
-    this.ensureInitialized()
-    return getFromStorage<Attendance[]>(STORAGE_KEYS.attendance, [])
+    this.ensureInitialized();
+    return getFromStorage<Attendance[]>(STORAGE_KEYS.attendance, []);
   }
 
   getAttendanceByStudentId(studentId: string): Attendance[] {
-    return this.getAttendance().filter((a) => a.studentId === studentId)
+    return this.getAttendance().filter((a) => a.studentId === studentId);
   }
 
   getAttendanceByDate(date: string): Attendance[] {
-    return this.getAttendance().filter((a) => a.date === date)
+    return this.getAttendance().filter((a) => a.date === date);
   }
 
-  getAttendanceByDeptDateSemester(department: string, date: string, semester?: number): Attendance[] {
+  getAttendanceByDeptDateSemester(
+    department: string,
+    date: string,
+    semester?: number
+  ): Attendance[] {
     const students = semester
       ? this.getStudentsByDepartmentAndSemester(department, semester)
-      : this.getStudentsByDepartment(department)
-    const studentIds = students.map((s) => s.id)
-    return this.getAttendance().filter((a) => a.date === date && studentIds.includes(a.studentId))
+      : this.getStudentsByDepartment(department);
+    const studentIds = students.map((s) => s.id);
+    return this.getAttendance().filter(
+      (a) => a.date === date && studentIds.includes(a.studentId)
+    );
   }
 
-  addAttendance(attendance: Omit<Attendance, "id" | "createdAt">): Attendance {
-    const attendanceList = this.getAttendance()
+  addAttendance(
+    attendance: Omit<Attendance, "id" | "createdAt" | "updatedAt">
+  ): Attendance {
+    const attendanceList = this.getAttendance();
     const newAttendance: Attendance = {
       ...attendance,
       id: Date.now().toString(),
       createdAt: new Date().toISOString(),
-    }
-    attendanceList.push(newAttendance)
-    setToStorage(STORAGE_KEYS.attendance, attendanceList)
-    return newAttendance
+      updatedAt: new Date().toISOString(),
+    };
+    attendanceList.push(newAttendance);
+    setToStorage(STORAGE_KEYS.attendance, attendanceList);
+    return newAttendance;
   }
 
   upsertAttendance(
@@ -682,55 +731,56 @@ class PersistentDataStore {
     date: string,
     status: "present" | "absent" | "late",
     subject: string,
-    markedBy: string,
+    markedBy: string
   ): Attendance {
-    const attendanceList = this.getAttendance()
+    const attendanceList = this.getAttendance();
     const existingIndex = attendanceList.findIndex(
-      (a) => a.studentId === studentId && a.date === date && a.subject === subject,
-    )
+      (a) =>
+        a.studentId === studentId && a.date === date && a.subject === subject
+    );
 
     if (existingIndex !== -1) {
       attendanceList[existingIndex] = {
         ...attendanceList[existingIndex],
         status,
         markedBy,
-      }
-      setToStorage(STORAGE_KEYS.attendance, attendanceList)
-      return attendanceList[existingIndex]
+      };
+      setToStorage(STORAGE_KEYS.attendance, attendanceList);
+      return attendanceList[existingIndex];
     } else {
-      return this.addAttendance({ studentId, date, status, subject, markedBy })
+      return this.addAttendance({ studentId, date, status, subject, markedBy });
     }
   }
 
   updateAttendance(id: string, data: Partial<Attendance>): Attendance | null {
-    const attendanceList = this.getAttendance()
-    const index = attendanceList.findIndex((a) => a.id === id)
+    const attendanceList = this.getAttendance();
+    const index = attendanceList.findIndex((a) => a.id === id);
     if (index !== -1) {
-      attendanceList[index] = { ...attendanceList[index], ...data }
-      setToStorage(STORAGE_KEYS.attendance, attendanceList)
-      return attendanceList[index]
+      attendanceList[index] = { ...attendanceList[index], ...data };
+      setToStorage(STORAGE_KEYS.attendance, attendanceList);
+      return attendanceList[index];
     }
-    return null
+    return null;
   }
 
   deleteAttendance(id: string): boolean {
-    const attendanceList = this.getAttendance()
-    const index = attendanceList.findIndex((a) => a.id === id)
+    const attendanceList = this.getAttendance();
+    const index = attendanceList.findIndex((a) => a.id === id);
     if (index !== -1) {
-      attendanceList.splice(index, 1)
-      setToStorage(STORAGE_KEYS.attendance, attendanceList)
-      return true
+      attendanceList.splice(index, 1);
+      setToStorage(STORAGE_KEYS.attendance, attendanceList);
+      return true;
     }
-    return false
+    return false;
   }
 
   // Stats
   getStats() {
-    const students = this.getStudents()
-    const teachers = this.getTeachers()
-    const notices = this.getNotices()
-    const projects = this.getProjects()
-    const attendance = this.getAttendance()
+    const students = this.getStudents();
+    const teachers = this.getTeachers();
+    const notices = this.getNotices();
+    const projects = this.getProjects();
+    const attendance = this.getAttendance();
 
     return {
       totalStudents: students.length,
@@ -740,16 +790,16 @@ class PersistentDataStore {
       activeStudents: students.filter((s) => s.status === "active").length,
       activeTeachers: teachers.filter((t) => t.status === "active").length,
       totalAttendanceRecords: attendance.length,
-    }
+    };
   }
 
   // Reset data (for testing)
   resetToDefaults(): void {
-    if (typeof window === "undefined") return
-    localStorage.removeItem(STORAGE_KEYS.initialized)
-    invalidateCache()
-    initializeStorage()
+    if (typeof window === "undefined") return;
+    localStorage.removeItem(STORAGE_KEYS.initialized);
+    invalidateCache();
+    initializeStorage();
   }
 }
 
-export const persistentStore = new PersistentDataStore()
+export const persistentStore = new PersistentDataStore();

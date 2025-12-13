@@ -1,4 +1,12 @@
-import type { Student, Teacher, Notice, Project, Admin, TeacherCredentials, Attendance } from "./types"
+import type {
+  Student,
+  Teacher,
+  Notice,
+  Project,
+  Admin,
+  TeacherCredentials,
+  Attendance,
+} from "./types";
 
 // Admin credentials (manually configured)
 export const ADMIN_CREDENTIALS: Admin[] = [
@@ -9,7 +17,7 @@ export const ADMIN_CREDENTIALS: Admin[] = [
     name: "System Administrator",
     role: "super-admin",
   },
-]
+];
 
 export const TEACHER_CREDENTIALS: TeacherCredentials[] = [
   {
@@ -24,7 +32,7 @@ export const TEACHER_CREDENTIALS: TeacherCredentials[] = [
     username: "suman.roy",
     password: "teacher123",
   },
-]
+];
 
 const initialStudents: Student[] = [
   // CSE Students - different years
@@ -202,7 +210,7 @@ const initialStudents: Student[] = [
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
-]
+];
 
 const initialTeachers: Teacher[] = [
   {
@@ -235,25 +243,27 @@ const initialTeachers: Teacher[] = [
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
-]
+];
 
 const initialNotices: Notice[] = [
   {
     id: "1",
     title: "Mid-Semester Examination Schedule",
-    content: "Mid-semester examinations for all departments will commence from March 15, 2024.",
+    content:
+      "Mid-semester examinations for all departments will commence from March 15, 2024.",
     category: "exam",
     publishedAt: new Date().toISOString(),
     expiresAt: null,
     isActive: true,
   },
-]
+];
 
 const initialProjects: Project[] = [
   {
     id: "1",
     title: "Smart Campus Management System",
-    description: "An IoT-based system for managing campus resources efficiently.",
+    description:
+      "An IoT-based system for managing campus resources efficiently.",
     studentIds: ["1"],
     studentNames: ["Rahul Sharma"],
     technologies: ["React", "Node.js", "IoT", "MongoDB"],
@@ -263,37 +273,39 @@ const initialProjects: Project[] = [
     githubUrl: "https://github.com/example/smart-campus",
     websiteUrl: "https://smart-campus.example.com",
   },
-]
+];
 
-const initialAttendance: Attendance[] = []
+const initialAttendance: Attendance[] = [];
 
 // In-memory store for server-side operations
 class DataStore {
-  private students: Student[] = [...initialStudents]
-  private teachers: Teacher[] = [...initialTeachers]
-  private notices: Notice[] = [...initialNotices]
-  private projects: Project[] = [...initialProjects]
-  private attendance: Attendance[] = [...initialAttendance]
+  private students: Student[] = [...initialStudents];
+  private teachers: Teacher[] = [...initialTeachers];
+  private notices: Notice[] = [...initialNotices];
+  private projects: Project[] = [...initialProjects];
+  private attendance: Attendance[] = [...initialAttendance];
 
   // Students
   getStudents() {
-    return [...this.students]
+    return [...this.students];
   }
 
   getStudentById(id: string) {
-    return this.students.find((s) => s.id === id)
+    return this.students.find((s) => s.id === id);
   }
 
   getStudentByRollNumber(rollNumber: string) {
-    return this.students.find((s) => s.rollNumber === rollNumber)
+    return this.students.find((s) => s.rollNumber === rollNumber);
   }
 
   getStudentsByDepartment(department: string) {
-    return this.students.filter((s) => s.department === department)
+    return this.students.filter((s) => s.department === department);
   }
 
   getStudentsByDepartmentAndSemester(department: string, semester: number) {
-    return this.students.filter((s) => s.department === department && s.semester === semester)
+    return this.students.filter(
+      (s) => s.department === department && s.semester === semester
+    );
   }
 
   addStudent(student: Omit<Student, "id" | "createdAt" | "updatedAt">) {
@@ -302,44 +314,44 @@ class DataStore {
       id: Date.now().toString(),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-    }
-    this.students.push(newStudent)
-    return newStudent
+    };
+    this.students.push(newStudent);
+    return newStudent;
   }
 
   updateStudent(id: string, data: Partial<Student>) {
-    const index = this.students.findIndex((s) => s.id === id)
+    const index = this.students.findIndex((s) => s.id === id);
     if (index !== -1) {
       this.students[index] = {
         ...this.students[index],
         ...data,
         updatedAt: new Date().toISOString(),
-      }
-      return this.students[index]
+      };
+      return this.students[index];
     }
-    return null
+    return null;
   }
 
   deleteStudent(id: string) {
-    const index = this.students.findIndex((s) => s.id === id)
+    const index = this.students.findIndex((s) => s.id === id);
     if (index !== -1) {
-      this.students.splice(index, 1)
-      return true
+      this.students.splice(index, 1);
+      return true;
     }
-    return false
+    return false;
   }
 
   // Teachers
   getTeachers() {
-    return [...this.teachers]
+    return [...this.teachers];
   }
 
   getTeacherById(id: string) {
-    return this.teachers.find((t) => t.id === id)
+    return this.teachers.find((t) => t.id === id);
   }
 
   getTeachersByDepartment(department: string) {
-    return this.teachers.filter((t) => t.department === department)
+    return this.teachers.filter((t) => t.department === department);
   }
 
   addTeacher(teacher: Omit<Teacher, "id" | "createdAt" | "updatedAt">) {
@@ -348,125 +360,134 @@ class DataStore {
       id: Date.now().toString(),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-    }
-    this.teachers.push(newTeacher)
-    return newTeacher
+    };
+    this.teachers.push(newTeacher);
+    return newTeacher;
   }
 
   updateTeacher(id: string, data: Partial<Teacher>) {
-    const index = this.teachers.findIndex((t) => t.id === id)
+    const index = this.teachers.findIndex((t) => t.id === id);
     if (index !== -1) {
       this.teachers[index] = {
         ...this.teachers[index],
         ...data,
         updatedAt: new Date().toISOString(),
-      }
-      return this.teachers[index]
+      };
+      return this.teachers[index];
     }
-    return null
+    return null;
   }
 
   deleteTeacher(id: string) {
-    const index = this.teachers.findIndex((t) => t.id === id)
+    const index = this.teachers.findIndex((t) => t.id === id);
     if (index !== -1) {
-      this.teachers.splice(index, 1)
-      return true
+      this.teachers.splice(index, 1);
+      return true;
     }
-    return false
+    return false;
   }
 
   // Notices
   getNotices() {
-    return [...this.notices]
+    return [...this.notices];
   }
 
   addNotice(notice: Omit<Notice, "id">) {
     const newNotice: Notice = {
       ...notice,
       id: Date.now().toString(),
-    }
-    this.notices.push(newNotice)
-    return newNotice
+    };
+    this.notices.push(newNotice);
+    return newNotice;
   }
 
   updateNotice(id: string, data: Partial<Notice>) {
-    const index = this.notices.findIndex((n) => n.id === id)
+    const index = this.notices.findIndex((n) => n.id === id);
     if (index !== -1) {
-      this.notices[index] = { ...this.notices[index], ...data }
-      return this.notices[index]
+      this.notices[index] = { ...this.notices[index], ...data };
+      return this.notices[index];
     }
-    return null
+    return null;
   }
 
   deleteNotice(id: string) {
-    const index = this.notices.findIndex((n) => n.id === id)
+    const index = this.notices.findIndex((n) => n.id === id);
     if (index !== -1) {
-      this.notices.splice(index, 1)
-      return true
+      this.notices.splice(index, 1);
+      return true;
     }
-    return false
+    return false;
   }
 
   // Projects
   getProjects() {
-    return [...this.projects]
+    return [...this.projects];
   }
 
   addProject(project: Omit<Project, "id">) {
     const newProject: Project = {
       ...project,
       id: Date.now().toString(),
-    }
-    this.projects.push(newProject)
-    return newProject
+    };
+    this.projects.push(newProject);
+    return newProject;
   }
 
   updateProject(id: string, data: Partial<Project>) {
-    const index = this.projects.findIndex((p) => p.id === id)
+    const index = this.projects.findIndex((p) => p.id === id);
     if (index !== -1) {
-      this.projects[index] = { ...this.projects[index], ...data }
-      return this.projects[index]
+      this.projects[index] = { ...this.projects[index], ...data };
+      return this.projects[index];
     }
-    return null
+    return null;
   }
 
   deleteProject(id: string) {
-    const index = this.projects.findIndex((p) => p.id === id)
+    const index = this.projects.findIndex((p) => p.id === id);
     if (index !== -1) {
-      this.projects.splice(index, 1)
-      return true
+      this.projects.splice(index, 1);
+      return true;
     }
-    return false
+    return false;
   }
 
   getAttendance() {
-    return [...this.attendance]
+    return [...this.attendance];
   }
 
   getAttendanceByStudentId(studentId: string) {
-    return this.attendance.filter((a) => a.studentId === studentId)
+    return this.attendance.filter((a) => a.studentId === studentId);
   }
 
   getAttendanceByDate(date: string) {
-    return this.attendance.filter((a) => a.date === date)
+    return this.attendance.filter((a) => a.date === date);
   }
 
-  getAttendanceByDeptDateSemester(department: string, date: string, semester?: number) {
+  getAttendanceByDeptDateSemester(
+    department: string,
+    date: string,
+    semester?: number
+  ) {
     const students = semester
       ? this.getStudentsByDepartmentAndSemester(department, semester)
-      : this.getStudentsByDepartment(department)
-    const studentIds = students.map((s) => s.id)
-    return this.attendance.filter((a) => a.date === date && studentIds.includes(a.studentId))
+      : this.getStudentsByDepartment(department);
+    const studentIds = students.map((s) => s.id);
+    return this.attendance.filter(
+      (a) => a.date === date && studentIds.includes(a.studentId)
+    );
   }
 
-  addAttendance(attendance: Omit<Attendance, "id" | "createdAt">) {
+  addAttendance(
+    attendance: Omit<Attendance, "id" | "createdAt" | "updatedAt">
+  ) {
     const newAttendance: Attendance = {
       ...attendance,
       id: Date.now().toString(),
       createdAt: new Date().toISOString(),
-    }
-    this.attendance.push(newAttendance)
-    return newAttendance
+      updatedAt: new Date().toISOString(),
+    };
+    this.attendance.push(newAttendance);
+    return newAttendance;
   }
 
   upsertAttendance(
@@ -474,40 +495,41 @@ class DataStore {
     date: string,
     status: "present" | "absent" | "late",
     subject: string,
-    markedBy: string,
+    markedBy: string
   ) {
     const existingIndex = this.attendance.findIndex(
-      (a) => a.studentId === studentId && a.date === date && a.subject === subject,
-    )
+      (a) =>
+        a.studentId === studentId && a.date === date && a.subject === subject
+    );
 
     if (existingIndex !== -1) {
       this.attendance[existingIndex] = {
         ...this.attendance[existingIndex],
         status,
         markedBy,
-      }
-      return this.attendance[existingIndex]
+      };
+      return this.attendance[existingIndex];
     } else {
-      return this.addAttendance({ studentId, date, status, subject, markedBy })
+      return this.addAttendance({ studentId, date, status, subject, markedBy });
     }
   }
 
   updateAttendance(id: string, data: Partial<Attendance>) {
-    const index = this.attendance.findIndex((a) => a.id === id)
+    const index = this.attendance.findIndex((a) => a.id === id);
     if (index !== -1) {
-      this.attendance[index] = { ...this.attendance[index], ...data }
-      return this.attendance[index]
+      this.attendance[index] = { ...this.attendance[index], ...data };
+      return this.attendance[index];
     }
-    return null
+    return null;
   }
 
   deleteAttendance(id: string) {
-    const index = this.attendance.findIndex((a) => a.id === id)
+    const index = this.attendance.findIndex((a) => a.id === id);
     if (index !== -1) {
-      this.attendance.splice(index, 1)
-      return true
+      this.attendance.splice(index, 1);
+      return true;
     }
-    return false
+    return false;
   }
 
   // Stats
@@ -520,49 +542,49 @@ class DataStore {
       activeStudents: this.students.filter((s) => s.status === "active").length,
       activeTeachers: this.teachers.filter((t) => t.status === "active").length,
       totalAttendanceRecords: this.attendance.length,
-    }
+    };
   }
 
   // Sync from external data (for client-to-server sync)
   syncStudents(students: Student[]) {
-    this.students = [...students]
+    this.students = [...students];
   }
 
   syncTeachers(teachers: Teacher[]) {
-    this.teachers = [...teachers]
+    this.teachers = [...teachers];
   }
 
   // Teacher Credentials
   getTeacherCredentials() {
-    return [...TEACHER_CREDENTIALS]
+    return [...TEACHER_CREDENTIALS];
   }
 
   addTeacherCredential(credential: Omit<TeacherCredentials, "id">) {
     const newCredential: TeacherCredentials = {
       ...credential,
       id: Date.now().toString(),
-    }
-    TEACHER_CREDENTIALS.push(newCredential)
-    return newCredential
+    };
+    TEACHER_CREDENTIALS.push(newCredential);
+    return newCredential;
   }
 
   updateTeacherCredential(id: string, data: Partial<TeacherCredentials>) {
-    const index = TEACHER_CREDENTIALS.findIndex((c) => c.id === id)
+    const index = TEACHER_CREDENTIALS.findIndex((c) => c.id === id);
     if (index !== -1) {
-      TEACHER_CREDENTIALS[index] = { ...TEACHER_CREDENTIALS[index], ...data }
-      return TEACHER_CREDENTIALS[index]
+      TEACHER_CREDENTIALS[index] = { ...TEACHER_CREDENTIALS[index], ...data };
+      return TEACHER_CREDENTIALS[index];
     }
-    return null
+    return null;
   }
 
   deleteTeacherCredential(id: string) {
-    const index = TEACHER_CREDENTIALS.findIndex((c) => c.id === id)
+    const index = TEACHER_CREDENTIALS.findIndex((c) => c.id === id);
     if (index !== -1) {
-      TEACHER_CREDENTIALS.splice(index, 1)
-      return true
+      TEACHER_CREDENTIALS.splice(index, 1);
+      return true;
     }
-    return false
+    return false;
   }
 }
 
-export const dataStore = new DataStore()
+export const dataStore = new DataStore();

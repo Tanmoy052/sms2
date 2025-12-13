@@ -29,7 +29,10 @@ export async function connectToDatabase(): Promise<{
     return { client, db };
   } catch (error) {
     console.error("❌ Failed to connect to MongoDB:", error);
-    console.error("Error details:", error.message);
+    console.error(
+      "Error details:",
+      error instanceof Error ? error.message : String(error)
+    );
     throw error;
   }
 }
