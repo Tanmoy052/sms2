@@ -4,14 +4,27 @@ import type { Attendance } from "@/lib/types";
 
 export async function getAttendanceFromDB(): Promise<Attendance[]> {
   try {
+    console.log("🔄 Connecting to database...");
     const { db } = await connectToDatabase();
+    console.log("📊 Fetching attendance records...");
     const attendance = await db.collection("attendance").find({}).toArray();
-    return attendance.map((item) => ({
-      ...item,
+    console.log("✅ Found", attendance.length, "raw records");
+
+    const result = attendance.map((item) => ({
       id: item._id.toString(),
+      studentId: item.studentId,
+      date: item.date,
+      status: item.status,
+      subject: item.subject,
+      markedBy: item.markedBy,
+      createdAt: item.createdAt,
+      updatedAt: item.updatedAt,
     })) as Attendance[];
+
+    console.log("📋 Mapped to", result.length, "attendance objects");
+    return result;
   } catch (error) {
-    console.error("Error fetching attendance:", error);
+    console.error("❌ Error fetching attendance:", error);
     return [];
   }
 }
@@ -51,8 +64,14 @@ export async function updateAttendanceInDB(
       );
     if (result) {
       return {
-        ...result,
         id: result._id.toString(),
+        studentId: result.studentId,
+        date: result.date,
+        status: result.status,
+        subject: result.subject,
+        markedBy: result.markedBy,
+        createdAt: result.createdAt,
+        updatedAt: result.updatedAt,
       } as Attendance;
     }
     return null;
@@ -65,36 +84,42 @@ export async function updateAttendanceInDB(
 export async function upsertAttendanceInDB(
   studentId: string,
   date: string,
-  status: 'present' | 'absent' | 'late',
+  status: "present" | "absent" | "late",
   subject: string,
   markedBy: string
 ): Promise<Attendance> {
   try {
-    const { db } = await connectToDatabase()
-    const existing = await db.collection('attendance').findOne({
+    const { db } = await connectToDatabase();
+    const existing = await db.collection("attendance").findOne({
       studentId,
       date,
       subject,
-    })
+    });
 
     if (existing) {
       // Update existing
-      const result = await db.collection('attendance').findOneAndUpdate(
+      const result = await db.collection("attendance").findOneAndUpdate(
         { _id: existing._id },
         {
           $set: {
             status,
             markedBy,
             updatedAt: new Date(),
-          }
+          },
         },
-        { returnDocument: 'after' }
-      )
+        { returnDocument: "after" }
+      );
       if (result) {
         return {
-          ...result,
           id: result._id.toString(),
-        } as Attendance
+          studentId: result.studentId,
+          date: result.date,
+          status: result.status,
+          subject: result.subject,
+          markedBy: result.markedBy,
+          createdAt: result.createdAt,
+          updatedAt: result.updatedAt,
+        } as Attendance;
       }
     } else {
       // Insert new
@@ -106,29 +131,29 @@ export async function upsertAttendanceInDB(
         markedBy,
         createdAt: new Date(),
         updatedAt: new Date(),
-      }
-      const result = await db.collection('attendance').insertOne(newAttendance)
+      };
+      const result = await db.collection("attendance").insertOne(newAttendance);
       return {
         ...newAttendance,
         id: result.insertedId.toString(),
-      }
+      };
     }
-    throw new Error('Failed to upsert attendance')
+    throw new Error("Failed to upsert attendance");
   } catch (error) {
-    console.error('Error upserting attendance:', error)
-    throw error
+    console.error("Error upserting attendance:", error);
+    throw error;
   }
 }
 
 export async function deleteAttendanceFromDB(id: string): Promise<boolean> {
   try {
-    const { db } = await connectToDatabase()
-    const result = await db.collection('attendance').deleteOne({
-      _id: new ObjectId(id)
-    })
-    return result.deletedCount > 0
+    const { db } = await connectToDatabase();
+    const result = await db.collection("attendance").deleteOne({
+      _id: new ObjectId(id),
+    });
+    return result.deletedCount > 0;
   } catch (error) {
-    console.error('Error deleting attendance:', error)
-    return false
+    console.error("Error deleting attendance:", error);
+    return false;
   }
 }

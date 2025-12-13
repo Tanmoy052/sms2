@@ -1,84 +1,106 @@
-"use client"
+"use client";
 
-import useSWR from "swr"
-import { persistentStore } from "@/lib/persistent-store"
-import type { Student, Teacher, Notice, Project, Attendance } from "@/lib/types"
+import useSWR from "swr";
+import { persistentStore } from "@/lib/persistent-store";
+import type {
+  Student,
+  Teacher,
+  Notice,
+  Project,
+  Attendance,
+} from "@/lib/types";
 
 // Custom fetcher that uses persistent store
-const studentsFetcher = () => persistentStore.getStudents()
-const teachersFetcher = () => persistentStore.getTeachers()
-const noticesFetcher = () => persistentStore.getNotices()
-const projectsFetcher = () => persistentStore.getProjects()
+const studentsFetcher = () => persistentStore.getStudents();
+const teachersFetcher = () => persistentStore.getTeachers();
+const noticesFetcher = () => persistentStore.getNotices();
+const projectsFetcher = () => persistentStore.getProjects();
 const attendanceFetcher = async () => {
-  const response = await fetch('/api/attendance')
-  if (!response.ok) throw new Error('Failed to fetch attendance')
-  return response.json()
-}
-const statsFetcher = () => persistentStore.getStats()
+  const response = await fetch("/api/attendance");
+  if (!response.ok) throw new Error("Failed to fetch attendance");
+  return response.json();
+};
+const statsFetcher = () => persistentStore.getStats();
 
 export function useStudents() {
-  const { data, error, isLoading, mutate } = useSWR<Student[]>("students", studentsFetcher, {
-    revalidateOnFocus: false,
-    dedupingInterval: 1000,
-  })
+  const { data, error, isLoading, mutate } = useSWR<Student[]>(
+    "students",
+    studentsFetcher,
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 1000,
+    }
+  );
 
   return {
     students: data || [],
     isLoading,
     isError: error,
     mutate,
-    addStudent: async (student: Omit<Student, "id" | "createdAt" | "updatedAt">) => {
-      const newStudent = persistentStore.addStudent(student)
-      await mutate()
-      return newStudent
+    addStudent: async (
+      student: Omit<Student, "id" | "createdAt" | "updatedAt">
+    ) => {
+      const newStudent = persistentStore.addStudent(student);
+      await mutate();
+      return newStudent;
     },
     updateStudent: async (id: string, data: Partial<Student>) => {
-      const updated = persistentStore.updateStudent(id, data)
-      await mutate()
-      return updated
+      const updated = persistentStore.updateStudent(id, data);
+      await mutate();
+      return updated;
     },
     deleteStudent: async (id: string) => {
-      const result = persistentStore.deleteStudent(id)
-      await mutate()
-      return result
+      const result = persistentStore.deleteStudent(id);
+      await mutate();
+      return result;
     },
-  }
+  };
 }
 
 export function useTeachers() {
-  const { data, error, isLoading, mutate } = useSWR<Teacher[]>("teachers", teachersFetcher, {
-    revalidateOnFocus: false,
-    dedupingInterval: 1000,
-  })
+  const { data, error, isLoading, mutate } = useSWR<Teacher[]>(
+    "teachers",
+    teachersFetcher,
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 1000,
+    }
+  );
 
   return {
     teachers: data || [],
     isLoading,
     isError: error,
     mutate,
-    addTeacher: async (teacher: Omit<Teacher, "id" | "createdAt" | "updatedAt">) => {
-      const newTeacher = persistentStore.addTeacher(teacher)
-      await mutate()
-      return newTeacher
+    addTeacher: async (
+      teacher: Omit<Teacher, "id" | "createdAt" | "updatedAt">
+    ) => {
+      const newTeacher = persistentStore.addTeacher(teacher);
+      await mutate();
+      return newTeacher;
     },
     updateTeacher: async (id: string, data: Partial<Teacher>) => {
-      const updated = persistentStore.updateTeacher(id, data)
-      await mutate()
-      return updated
+      const updated = persistentStore.updateTeacher(id, data);
+      await mutate();
+      return updated;
     },
     deleteTeacher: async (id: string) => {
-      const result = persistentStore.deleteTeacher(id)
-      await mutate()
-      return result
+      const result = persistentStore.deleteTeacher(id);
+      await mutate();
+      return result;
     },
-  }
+  };
 }
 
 export function useNotices() {
-  const { data, error, isLoading, mutate } = useSWR<Notice[]>("notices", noticesFetcher, {
-    revalidateOnFocus: false,
-    dedupingInterval: 1000,
-  })
+  const { data, error, isLoading, mutate } = useSWR<Notice[]>(
+    "notices",
+    noticesFetcher,
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 1000,
+    }
+  );
 
   return {
     notices: data || [],
@@ -86,28 +108,32 @@ export function useNotices() {
     isError: error,
     mutate,
     addNotice: async (notice: Omit<Notice, "id">) => {
-      const newNotice = persistentStore.addNotice(notice)
-      await mutate()
-      return newNotice
+      const newNotice = persistentStore.addNotice(notice);
+      await mutate();
+      return newNotice;
     },
     updateNotice: async (id: string, data: Partial<Notice>) => {
-      const updated = persistentStore.updateNotice(id, data)
-      await mutate()
-      return updated
+      const updated = persistentStore.updateNotice(id, data);
+      await mutate();
+      return updated;
     },
     deleteNotice: async (id: string) => {
-      const result = persistentStore.deleteNotice(id)
-      await mutate()
-      return result
+      const result = persistentStore.deleteNotice(id);
+      await mutate();
+      return result;
     },
-  }
+  };
 }
 
 export function useProjects() {
-  const { data, error, isLoading, mutate } = useSWR<Project[]>("projects", projectsFetcher, {
-    revalidateOnFocus: false,
-    dedupingInterval: 1000,
-  })
+  const { data, error, isLoading, mutate } = useSWR<Project[]>(
+    "projects",
+    projectsFetcher,
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 1000,
+    }
+  );
 
   return {
     projects: data || [],
@@ -115,28 +141,32 @@ export function useProjects() {
     isError: error,
     mutate,
     addProject: async (project: Omit<Project, "id">) => {
-      const newProject = persistentStore.addProject(project)
-      await mutate()
-      return newProject
+      const newProject = persistentStore.addProject(project);
+      await mutate();
+      return newProject;
     },
     updateProject: async (id: string, data: Partial<Project>) => {
-      const updated = persistentStore.updateProject(id, data)
-      await mutate()
-      return updated
+      const updated = persistentStore.updateProject(id, data);
+      await mutate();
+      return updated;
     },
     deleteProject: async (id: string) => {
-      const result = persistentStore.deleteProject(id)
-      await mutate()
-      return result
+      const result = persistentStore.deleteProject(id);
+      await mutate();
+      return result;
     },
-  }
+  };
 }
 
 export function useAttendance() {
-  const { data, error, isLoading, mutate } = useSWR<Attendance[]>("attendance", attendanceFetcher, {
-    revalidateOnFocus: false,
-    dedupingInterval: 1000,
-  })
+  const { data, error, isLoading, mutate } = useSWR<Attendance[]>(
+    "attendance",
+    attendanceFetcher,
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 1000,
+    }
+  );
 
   return {
     attendance: data || [],
@@ -144,60 +174,60 @@ export function useAttendance() {
     isError: error,
     mutate,
     addAttendance: async (attendance: Omit<Attendance, "id" | "createdAt">) => {
-      const response = await fetch('/api/attendance', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/attendance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(attendance),
-      })
-      if (!response.ok) throw new Error('Failed to add attendance')
-      const newAttendance = await response.json()
-      await mutate()
-      return newAttendance
+      });
+      if (!response.ok) throw new Error("Failed to add attendance");
+      const newAttendance = await response.json();
+      await mutate();
+      return newAttendance;
     },
     upsertAttendance: async (
       studentId: string,
       date: string,
       status: "present" | "absent" | "late",
       subject: string,
-      markedBy: string,
+      markedBy: string
     ) => {
-      const response = await fetch('/api/attendance/upsert', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/attendance/upsert", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ studentId, date, status, subject, markedBy }),
-      })
-      if (!response.ok) throw new Error('Failed to upsert attendance')
-      const result = await response.json()
-      await mutate()
-      return result
+      });
+      if (!response.ok) throw new Error("Failed to upsert attendance");
+      const result = await response.json();
+      await mutate();
+      return result;
     },
     updateAttendance: async (id: string, data: Partial<Attendance>) => {
       const response = await fetch(`/api/attendance/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
-      })
-      if (!response.ok) throw new Error('Failed to update attendance')
-      const updated = await response.json()
-      await mutate()
-      return updated
+      });
+      if (!response.ok) throw new Error("Failed to update attendance");
+      const updated = await response.json();
+      await mutate();
+      return updated;
     },
     deleteAttendance: async (id: string) => {
       const response = await fetch(`/api/attendance/${id}`, {
-        method: 'DELETE',
-      })
-      if (!response.ok) throw new Error('Failed to delete attendance')
-      await mutate()
-      return true
+        method: "DELETE",
+      });
+      if (!response.ok) throw new Error("Failed to delete attendance");
+      await mutate();
+      return true;
     },
-  }
+  };
 }
 
 export function useStats() {
   const { data, error, isLoading, mutate } = useSWR("stats", statsFetcher, {
     revalidateOnFocus: false,
     dedupingInterval: 2000,
-  })
+  });
 
   return {
     stats: data || {
@@ -212,19 +242,19 @@ export function useStats() {
     isLoading,
     isError: error,
     mutate,
-  }
+  };
 }
 
 export function useStudentByRollNumber(rollNumber: string) {
   const { data, error, isLoading } = useSWR(
     rollNumber ? `student-${rollNumber}` : null,
     () => persistentStore.getStudentByRollNumber(rollNumber),
-    { revalidateOnFocus: false },
-  )
+    { revalidateOnFocus: false }
+  );
 
   return {
     student: data,
     isLoading,
     isError: error,
-  }
+  };
 }

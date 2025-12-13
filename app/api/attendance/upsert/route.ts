@@ -1,18 +1,49 @@
-import { NextResponse } from "next/server"
-import { upsertAttendanceInDB } from "@/lib/attendance-db"
+import {
+  getAttendanceData,
+  addAttendanceRecord,
+  findAttendanceRecord,
+  updateAttendanceRecord,
+  AttendanceRecord,
+} from "@/lib/attendance-storage";
 
 export async function POST(request: Request) {
-  const { studentId, date, status, subject, markedBy } = await request.json()
+  const { studentId, date, status, subject, markedBy } = await request.json();
 
   if (!studentId || !date || !status || !subject || !markedBy) {
-    return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
+    return Response.json({ error: "Missing required fields" }, { status: 400 });
   }
 
   try {
-    const result = await upsertAttendanceInDB(studentId, date, status, subject, markedBy)
-    return NextResponse.json(result)
+    // Find existing record
+    const existingRecord = findAttendanceRecord(studentId, date, subject);
+
+    if (existingRecord) {
+      // Update existing
+      const updated = updateAttendanceRecord(existingRecord.id, {
+        status,
+        markedBy,
+      });
+      return Response.json(updated);
+    } else {
+      // Create new
+      const newRecord: AttendanceRecord = {
+        id: Date.now().toString(),
+        studentId,
+        date,
+        status,
+        subject,
+        markedBy,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      addAttendanceRecord(newRecord);
+      return Response.json(newRecord);
+    }
   } catch (error) {
-    console.error('Error upserting attendance:', error)
-    return NextResponse.json({ error: "Failed to upsert attendance" }, { status: 500 })
+    console.error("Error upserting attendance:", error);
+    return Response.json(
+      { error: "Failed to upsert attendance" },
+      { status: 500 }
+    );
   }
 }

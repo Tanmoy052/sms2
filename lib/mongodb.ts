@@ -17,15 +17,19 @@ export async function connectToDatabase(): Promise<{
   const client = new MongoClient(MONGODB_URI);
 
   try {
+    console.log("🔄 Connecting to MongoDB at", MONGODB_URI);
     await client.connect();
+    console.log("✅ MongoDB connected successfully");
     const db = client.db(MONGODB_DB);
+    console.log("📊 Using database:", MONGODB_DB);
 
     cachedClient = client;
     cachedDb = db;
 
     return { client, db };
   } catch (error) {
-    console.error("Failed to connect to MongoDB:", error);
+    console.error("❌ Failed to connect to MongoDB:", error);
+    console.error("Error details:", error.message);
     throw error;
   }
 }
