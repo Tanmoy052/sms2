@@ -1,10 +1,4 @@
-import {
-  getAttendanceData,
-  addAttendanceRecord,
-  findAttendanceRecord,
-  updateAttendanceRecord,
-  AttendanceRecord,
-} from "@/lib/attendance-storage";
+import { upsertAttendanceInDB } from "@/lib/attendance-db";
 
 export async function POST(request: Request) {
   const { studentId, date, status, subject, markedBy } = await request.json();
@@ -14,31 +8,14 @@ export async function POST(request: Request) {
   }
 
   try {
-    // Find existing record
-    const existingRecord = findAttendanceRecord(studentId, date, subject);
-
-    if (existingRecord) {
-      // Update existing
-      const updated = updateAttendanceRecord(existingRecord.id, {
-        status,
-        markedBy,
-      });
-      return Response.json(updated);
-    } else {
-      // Create new
-      const newRecord: AttendanceRecord = {
-        id: Date.now().toString(),
-        studentId,
-        date,
-        status,
-        subject,
-        markedBy,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      addAttendanceRecord(newRecord);
-      return Response.json(newRecord);
-    }
+    const result = await upsertAttendanceInDB(
+      studentId,
+      date,
+      status,
+      subject,
+      markedBy
+    );
+    return Response.json(result);
   } catch (error) {
     console.error("Error upserting attendance:", error);
     return Response.json(

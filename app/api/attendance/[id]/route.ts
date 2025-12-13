@@ -1,7 +1,7 @@
 import {
-  updateAttendanceRecord,
-  deleteAttendanceRecord,
-} from "@/lib/attendance-storage";
+  updateAttendanceInDB,
+  deleteAttendanceFromDB,
+} from "@/lib/attendance-db";
 
 export async function PUT(
   request: Request,
@@ -11,7 +11,7 @@ export async function PUT(
   const data = await request.json();
 
   try {
-    const updated = updateAttendanceRecord(id, data);
+    const updated = await updateAttendanceInDB(id, data);
     if (!updated) {
       return Response.json({ error: "Not found" }, { status: 404 });
     }
@@ -33,7 +33,7 @@ export async function DELETE(
   const { id } = await params;
 
   try {
-    const deleted = deleteAttendanceRecord(id);
+    const deleted = await deleteAttendanceFromDB(id);
     if (!deleted) {
       return Response.json({ error: "Not found" }, { status: 404 });
     }

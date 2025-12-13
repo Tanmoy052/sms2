@@ -1,87 +1,69 @@
-import {
-  getAttendanceData,
-  addAttendanceRecord,
-  AttendanceRecord,
-} from "@/lib/attendance-storage";
+import { NextRequest, NextResponse } from "next/server";
+import { getAttendanceFromDB, addAttendanceToDB } from "@/lib/attendance-db";
+import type { Attendance } from "@/lib/types";
 
-// Helper function to initialize sample data
-function initializeSampleData() {
-  if (getAttendanceData().length === 0) {
-    const sampleData: AttendanceRecord[] = [
-      {
-        id: "1",
-        studentId: "6",
-        date: "2025-12-12",
-        status: "absent",
-        subject: "ee",
-        markedBy: "3",
-        createdAt: "2025-12-12T18:34:41.888Z",
-        updatedAt: "2025-12-12T18:34:41.888Z",
-      },
-      {
-        id: "2",
-        studentId: "7",
-        date: "2025-12-12",
-        status: "present",
-        subject: "ee",
-        markedBy: "3",
-        createdAt: "2025-12-12T18:34:42.108Z",
-        updatedAt: "2025-12-12T18:34:42.108Z",
-      },
-    ];
-    // Note: In a real app, you'd load from database here
-    sampleData.forEach((record) => addAttendanceRecord(record));
-  }
-}
-
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
-    initializeSampleData(); // Initialize sample data if needed
+    const { searchParams } = new URL(request.url);
+    const studentId = searchParams.get("studentId");
+    const date = searchParams.get("date");
+    const subject = searchParams.get("subject");
 
-    const url = new URL(request.url);
-    const search = url.searchParams;
-    const studentId = search.get("studentId");
-    const date = search.get("date");
-    const subject = search.get("subject");
+    let attendance = await getAttendanceFromDB();
 
-    let attendance = getAttendanceData();
-
+    // Filter by studentId if provided
     if (studentId) {
       attendance = attendance.filter((a) => a.studentId === studentId);
     }
+
+    // Filter by date if provided
     if (date) {
       attendance = attendance.filter((a) => a.date === date);
     }
+
+    // Filter by subject if provided
     if (subject) {
       attendance = attendance.filter((a) => a.subject === subject);
     }
 
-    return Response.json(attendance);
+    return NextResponse.json(attendance);
   } catch (error) {
     console.error("Error fetching attendance:", error);
-    return Response.json(
+    return NextResponse.json(
       { error: "Failed to fetch attendance" },
       { status: 500 }
     );
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    initializeSampleData(); // Initialize sample data if needed
+    const body = await request.json();
+    const { studentId, date, status, subject, markedBy } = body;
 
-    const data = await request.json();
-    const newRecord: AttendanceRecord = {
-      ...data,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+    if (!studentId || !date || !status || !subject || !markedBy) {
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    const newAttendance: Omit<Attendance, "id"> = {
+      studentId,
+      date,
+      status,
+      subject,
+      markedBy,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
-    addAttendanceRecord(newRecord);
-    return Response.json(newRecord);
+
+    const result = await addAttendanceToDB(newAttendance);
+
+    return NextResponse.json(result, { status: 201 });
   } catch (error) {
     console.error("Error creating attendance:", error);
-    return Response.json(
+    return NextResponse.json(
       { error: "Failed to create attendance" },
       { status: 500 }
     );
