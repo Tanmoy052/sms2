@@ -19,7 +19,11 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Error upserting attendance:", error);
     return Response.json(
-      { error: "Failed to upsert attendance" },
+      {
+        error: `Failed to upsert attendance: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      },
       { status: 500 }
     );
   }
