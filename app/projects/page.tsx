@@ -17,7 +17,7 @@ export default function ProjectsPage() {
       <header className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
-            <Image src="/images/cgec-logo.png" alt="CGEC Logo" width={40} height={40} className="rounded-full" />
+            <Image src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS-6jybyzr1r5WRLGCSQ4h5arS8GijNfgo7GA&s" alt="CGEC Logo" width={40} height={40} className="rounded-full" />
             <div className="flex flex-col leading-tight">
               <span className="font-bold text-lg">CGEC</span>
               <span className="text-sm text-muted-foreground">Student Portal</span>

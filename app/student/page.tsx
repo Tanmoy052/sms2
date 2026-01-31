@@ -213,7 +213,7 @@ export default function StudentDashboard() {
         <div className="container mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Image
-              src="/images/cgec-logo.png"
+              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS-6jybyzr1r5WRLGCSQ4h5arS8GijNfgo7GA&s"
               alt="CGEC Logo"
               width={32}
               height={32}

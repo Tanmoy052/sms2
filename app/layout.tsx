@@ -12,6 +12,13 @@ export const metadata: Metadata = {
   title: "CGEC Student Portal",
   description: "Student Management System for Coochbehar Government Engineering College",
   generator: "v0.app",
+  openGraph: {
+    images: ["https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS-6jybyzr1r5WRLGCSQ4h5arS8GijNfgo7GA&s"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: ["https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS-6jybyzr1r5WRLGCSQ4h5arS8GijNfgo7GA&s"],
+  },
   icons: {
     icon: [
       {

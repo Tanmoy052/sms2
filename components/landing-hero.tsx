@@ -16,7 +16,7 @@ import { COLLEGE_INFO, STATISTICS, DEPARTMENTS } from "@/lib/config";
 
 const COLLEGE_IMAGES = {
   background: "/images/cgec-acdemic.jpeg",
-  logo: "/images/cgec-logo.png",
+  logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS-6jybyzr1r5WRLGCSQ4h5arS8GijNfgo7GA&s",
 };
 
 const features = [

@@ -248,7 +248,7 @@ function LoginContent() {
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
               <Image
-                src="/images/cgec-logo.png"
+                src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS-6jybyzr1r5WRLGCSQ4h5arS8GijNfgo7GA&s"
                 alt="CGEC Logo"
                 width={64}
                 height={64}
