@@ -1,28 +1,22 @@
-import { NextResponse } from "next/server"
-import { persistentStore } from "@/lib/persistent-store"
+import { NextRequest, NextResponse } from "next/server";
+import { getStudentsFromDB, addStudentToDB } from "@/lib/student-db";
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url)
-  const department = searchParams.get("department")
-  const semester = searchParams.get("semester")
+export const dynamic = "force-dynamic";
 
-  let students = persistentStore.getStudents()
-
-  // Filter by department if provided
-  if (department) {
-    students = students.filter((s) => s.department === department)
-  }
-
-  // Filter by semester if provided
-  if (semester) {
-    students = students.filter((s) => s.semester === Number.parseInt(semester))
-  }
-
-  return NextResponse.json(students)
+export async function GET() {
+  const students = await getStudentsFromDB();
+  return NextResponse.json(students);
 }
 
-export async function POST(request: Request) {
-  const data = await request.json()
-  const student = persistentStore.addStudent(data)
-  return NextResponse.json(student)
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const newStudent = await addStudentToDB(body);
+    return NextResponse.json(newStudent, { status: 201 });
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Failed to create student" },
+      { status: 500 },
+    );
+  }
 }

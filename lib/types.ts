@@ -41,6 +41,8 @@ export interface Teacher {
   joiningDate: string;
   status: "active" | "on-leave" | "retired";
   photo?: string; // Added photo field for teacher profile picture
+  username?: string; // Added for display in admin panel
+  password?: string; // Added for display in admin panel
   createdAt: string;
   updatedAt: string;
 }
@@ -101,7 +103,17 @@ export const DEPARTMENTS = [
   "Electrical Engineering",
   "Mechanical Engineering",
   "Civil Engineering",
+  "Basic Science & Humanities",
 ] as const;
+
+export const DEPT_SHORT_CODES: Record<string, string> = {
+  "Computer Science & Engineering": "CSE",
+  "Electronics & Communication Engineering": "ECE",
+  "Electrical Engineering": "EE",
+  "Mechanical Engineering": "ME",
+  "Civil Engineering": "CE",
+  "Basic Science & Humanities": "BSH",
+};
 
 export type Department = (typeof DEPARTMENTS)[number];
 

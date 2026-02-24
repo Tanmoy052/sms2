@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAttendanceFromDB, addAttendanceToDB } from "@/lib/attendance-db";
 import type { Attendance } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -31,7 +33,7 @@ export async function GET(request: NextRequest) {
     console.error("Error fetching attendance:", error);
     return NextResponse.json(
       { error: "Failed to fetch attendance" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -44,7 +46,7 @@ export async function POST(request: NextRequest) {
     if (!studentId || !date || !status || !subject || !markedBy) {
       return NextResponse.json(
         { error: "Missing required fields" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -65,7 +67,7 @@ export async function POST(request: NextRequest) {
     console.error("Error creating attendance:", error);
     return NextResponse.json(
       { error: "Failed to create attendance" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

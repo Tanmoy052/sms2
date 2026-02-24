@@ -1,0 +1,202 @@
+[
+  {
+    "name": "Mr. Somen Mondal",
+    "department": "Computer Science & Engineering",
+    "designation": "HOD and Assistant Professor in Computer Science & Engineering Department",
+    "photo": "https://cgec.org.in/../img/Faculty/Somen_P.jpg",
+    "qualification": "B.Tech., M.Tech.",
+    "specialization": "Cloud Computing, Advanced Cryptography & Network Security",
+    "status": "active",
+    "employeeId": "CS&593"
+  },
+  {
+    "name": "ARNAB GAIN",
+    "department": "Computer Science & Engineering",
+    "designation": "Assistant Professor in Computer Science & Engineering Department",
+    "photo": "https://cgec.org.in/../img/Faculty/423-A.jpg",
+    "qualification": "M.E.",
+    "specialization": "Computer Vision, Deep Learning, Formal Language and Automata Theory, Design and analysis of algorithm",
+    "status": "active",
+    "employeeId": "CS&194"
+  },
+  {
+    "name": "SHAHID ALI",
+    "department": "Computer Science & Engineering",
+    "designation": "Technical Assistant",
+    "photo": "https://cgec.org.in/../img/Faculty/ii.jpg",
+    "qualification": "BSC, PDIT, PGDSE",
+    "specialization": "COMPUTER Applications, C,C++, Java,VB",
+    "status": "active",
+    "employeeId": "CS&684"
+  },
+  {
+    "name": "PRANAB KUMAR MALLICK",
+    "department": "Computer Science & Engineering",
+    "designation": "TECHNICAL ASSISTANT",
+    "photo": "https://cgec.org.in/../img/Faculty/Mama.jpg",
+    "qualification": "B.TECH M.TECH, CSE",
+    "specialization": "Data Structure, Image Processing, Soft Computing",
+    "status": "active",
+    "employeeId": "CS&477"
+  },
+  {
+    "name": "Mr. Umakanta Bera",
+    "department": "Computer Science & Engineering",
+    "designation": "Technical Assistant",
+    "photo": "https://cgec.org.in/../img/Faculty/CSE_Umakanta_Bera.jpg",
+    "qualification": "B.Tech.",
+    "specialization": "Data Structure, Python, C, Java, Computer Architecture",
+    "status": "active",
+    "employeeId": "CS&831"
+  },
+  {
+    "name": "Dr. Prabir Kr. Naskar",
+    "department": "Computer Science & Engineering",
+    "designation": "Assistant Professor in Computer Science & Engineering Department",
+    "photo": "https://cgec.org.in/../img/Faculty/PrabirNaskar_cse.jpg.jpeg",
+    "qualification": "B.Tech, M.Tech, Ph.D",
+    "specialization": "",
+    "status": "active",
+    "employeeId": "CS&738"
+  },
+  {
+    "name": "Dr. Gautam Das",
+    "department": "Electronics & Communication Engineering",
+    "designation": "Professor, ECE Department",
+    "photo": "https://cgec.org.in/../img/Faculty/gdsir.jpg",
+    "qualification": "Ph.D in Engineering",
+    "specialization": "Digital electronic circuits, Microprocessor",
+    "status": "active",
+    "employeeId": "E&C758"
+  },
+  {
+    "name": "Mr. Soumik Sarkar",
+    "department": "Electronics & Communication Engineering",
+    "designation": "Technical Assistant",
+    "photo": "https://cgec.org.in/../img/Faculty/Soumik_phto.jpg",
+    "qualification": "B.Tech from Jalpaiguri Government Engineering College",
+    "specialization": "Solid State Devices, Analog Electronics",
+    "status": "active",
+    "employeeId": "E&C579"
+  },
+  {
+    "name": "AVISEK NANDI",
+    "department": "Electronics & Communication Engineering",
+    "designation": "TECHNICAL ASSISTANT",
+    "photo": "https://cgec.org.in/../img/Faculty/ECE_Avshek.bmp",
+    "qualification": "•\tDIPLOMA IN ELECTRONICS & TELECOMMUNICATION ENGINEERING FROM KALNA GOVT POLYTECHNIC",
+    "specialization": "ELECRONICS SYSTEM IN POWER ELECTRONICS FIELD",
+    "status": "active",
+    "employeeId": "E&C626"
+  },
+  {
+    "name": "Dr. Palash Das",
+    "department": "Electronics & Communication Engineering",
+    "designation": "Assistant Professor",
+    "photo": "https://cgec.org.in/../img/Faculty/palash.jpg",
+    "qualification": "Ph.D. (IIT Kharagpur) M.S. (IIT Kharagpur) B.Tech",
+    "specialization": "Gallium Nitride Compound Semiconductor based High Electron Mobility Transistor, HRXRD",
+    "status": "active",
+    "employeeId": "E&C517"
+  },
+  {
+    "name": "RAJIB DAS",
+    "department": "Electronics & Communication Engineering",
+    "designation": "Assistant Professor, ECE Department",
+    "photo": "https://cgec.org.in/../img/Faculty/RAJIB Das.JPG",
+    "qualification": "M.E.Tel.E, B. Tech",
+    "specialization": "Control Systems, Signal Processing",
+    "status": "active",
+    "employeeId": "E&C136"
+  },
+  {
+    "name": "Dr. Sourav Chakraborty",
+    "department": "Electronics & Communication Engineering",
+    "designation": "HOD & Assistant Professor",
+    "photo": "https://cgec.org.in/../img/Faculty/sourav.png",
+    "qualification": "Ph.D(Engg), M. Tech, B. Tech",
+    "specialization": "VLSI design, Signal Processing, Wireless system architecture design, Analog circuit design",
+    "status": "active",
+    "employeeId": "E&C659"
+  },
+  {
+    "name": "Abhijit Sarma",
+    "department": "Electronics & Communication Engineering",
+    "designation": "Technical Assistant",
+    "photo": "https://cgec.org.in/../img/Faculty/abhijit_ece01082024.jpeg",
+    "qualification": "Diploma in Electronics and Telecommunication Engineering",
+    "specialization": "",
+    "status": "active",
+    "employeeId": "E&C498"
+  },
+  {
+    "name": "BIREN GURUNG",
+    "department": "Civil Engineering",
+    "designation": "Assistant Professor",
+    "photo": "https://cgec.org.in/../img/Faculty/Biren Gurung.jpg",
+    "qualification": "BE, M.Tech",
+    "specialization": "Structure",
+    "status": "active",
+    "employeeId": "CE550"
+  },
+  {
+    "name": "Dr. Kingshuk Dan",
+    "department": "Civil Engineering",
+    "designation": "Assistant Professor",
+    "photo": "https://cgec.org.in/../img/Faculty/Kingshuk Dan.jpg",
+    "qualification": "B.E., M.E., Ph.D",
+    "specialization": "Soil mechanics, Highway and Transportation engineering",
+    "status": "active",
+    "employeeId": "CE153"
+  },
+  {
+    "name": "MD ASIF SK",
+    "department": "Civil Engineering",
+    "designation": "Assistant Professor",
+    "photo": "https://cgec.org.in/../img/Faculty/asif.jpg",
+    "qualification": "B.Tech, M.E.",
+    "specialization": "Water Resources Engineering, Hydraulic Structures",
+    "status": "active",
+    "employeeId": "CE396"
+  },
+  {
+    "name": "SHYAMAL GHOSH",
+    "department": "Civil Engineering",
+    "designation": "Assistant Professor",
+    "photo": "https://cgec.org.in/../img/Faculty/shyamalSir_ce.jpeg",
+    "qualification": "Ph D, M. E (Structural Engineering) BESU, B.Tech. (Civil Engineering) JGEC",
+    "specialization": "Structural Dynamics and Earthquake Engineering, Reliability Analysis,  Structural Engineering, Finite Element Analysis",
+    "status": "active",
+    "employeeId": "CE632"
+  },
+  {
+    "name": "ANSARUL SEIKH",
+    "department": "Civil Engineering",
+    "designation": "Technical Assistant",
+    "photo": "https://cgec.org.in/../img/Faculty/ansarul_ce01082024.jpg",
+    "qualification": "Diploma in Civil Engineering Department",
+    "specialization": "",
+    "status": "active",
+    "employeeId": "CE860"
+  },
+  {
+    "name": "Mr. Chhandamay Ray",
+    "department": "Civil Engineering",
+    "designation": "Assistant Professor",
+    "photo": "https://cgec.org.in/../img/Faculty/ChhandamayRay_ce.jpg",
+    "qualification": "M. Tech",
+    "specialization": "Soil Mechanics & Foundation Engineering",
+    "status": "active",
+    "employeeId": "CE561"
+  },
+  {
+    "name": "Mr. MITHUN MANDAL",
+    "department": "Civil Engineering",
+    "designation": "Assistant Professor",
+    "photo": "https://cgec.org.in/../img/Faculty/MithunMandal_ce.jpg",
+    "qualification": "M.Tech",
+    "specialization": "Geotechnical Engineering",
+    "status": "active",
+    "employeeId": "CE991"
+  }
+]

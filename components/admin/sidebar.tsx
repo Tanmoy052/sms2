@@ -70,10 +70,10 @@ export function AdminSidebar({ adminName }: { adminName: string }) {
   return (
     <>
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-white border-b z-50 flex items-center justify-between px-4">
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-white z-50 flex items-center justify-between px-4">
         <div className="flex items-center gap-2">
           <Image
-            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS-6jybyzr1r5WRLGCSQ4h5arS8GijNfgo7GA&s"
+            src="/images/cgec-logo.png"
             alt="CGEC Logo"
             width={32}
             height={32}
@@ -104,7 +104,7 @@ export function AdminSidebar({ adminName }: { adminName: string }) {
               />
             ))}
           </nav>
-          <div className="mt-4 pt-4 border-t">
+          <div className="mt-4 pt-4">
             <Button
               variant="ghost"
               className="w-full justify-start gap-3"
@@ -119,11 +119,11 @@ export function AdminSidebar({ adminName }: { adminName: string }) {
       )}
 
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex flex-col fixed left-0 top-0 bottom-0 w-64 bg-white border-r">
-        <div className="p-4 border-b">
+      <aside className="hidden lg:flex flex-col fixed left-0 top-0 bottom-0 w-64 bg-white">
+        <div className="p-4">
           <div className="flex items-center gap-3">
             <Image
-              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS-6jybyzr1r5WRLGCSQ4h5arS8GijNfgo7GA&s"
+              src="/images/cgec-logo.png"
               alt="CGEC Logo"
               width={40}
               height={40}
@@ -149,7 +149,7 @@ export function AdminSidebar({ adminName }: { adminName: string }) {
           ))}
         </nav>
 
-        <div className="p-4 border-t">
+        <div className="p-4">
           <Button
             variant="ghost"
             className="w-full justify-start gap-3"

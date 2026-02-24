@@ -39,7 +39,8 @@ import {
   Clock,
 } from "lucide-react";
 import type { Attendance, Student } from "@/lib/types";
-import { useAttendance, useStudents } from "@/hooks/use-persistent-store";
+import { useAttendance, useStudents } from "@/hooks/use-api";
+import { formatDate } from "@/lib/utils";
 
 export default function AttendancePage() {
   const {
@@ -94,11 +95,12 @@ export default function AttendancePage() {
   }
 
   const availableDepartments = Array.from(
-    new Set((students || []).map((s) => s.department))
+    new Set((students || []).map((s) => s.department)),
   );
   const deptStudentIds = (students || [])
     .filter(
-      (s) => selectedDepartment === "all" || s.department === selectedDepartment
+      (s) =>
+        selectedDepartment === "all" || s.department === selectedDepartment,
     )
     .map((s) => s.id);
   const filteredAttendance = (attendance || []).filter((a) => {
@@ -110,7 +112,7 @@ export default function AttendancePage() {
     return matchesDept && matchesDate && matchesSubject;
   });
   const availableSubjects = Array.from(
-    new Set(filteredAttendance.map((a) => a.subject))
+    new Set(filteredAttendance.map((a) => a.subject)),
   ).sort();
 
   const getStudentName = (studentId: string) => {
@@ -282,7 +284,7 @@ export default function AttendancePage() {
                     <TableCell className="font-medium">
                       {getStudentName(record.studentId)}
                     </TableCell>
-                    <TableCell>{record.date}</TableCell>
+                    <TableCell>{formatDate(record.date)}</TableCell>
                     <TableCell>{record.subject}</TableCell>
                     <TableCell>
                       <Badge
@@ -290,8 +292,8 @@ export default function AttendancePage() {
                           record.status === "present"
                             ? "default"
                             : record.status === "late"
-                            ? "outline"
-                            : "destructive"
+                              ? "outline"
+                              : "destructive"
                         }
                       >
                         {record.status}

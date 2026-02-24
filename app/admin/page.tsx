@@ -1,9 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Users, GraduationCap, Bell, FolderKanban } from "lucide-react"
-import { dataStore } from "@/lib/store"
+import { getDashboardStats } from "@/lib/stats-db"
 
-export default function AdminDashboard() {
-  const stats = dataStore.getStats()
+export default async function AdminDashboard() {
+  const stats = await getDashboardStats()
 
   const statCards = [
     {

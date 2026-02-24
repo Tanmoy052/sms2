@@ -10,7 +10,7 @@ import {
   useNotices,
   useProjects,
   useAttendance,
-} from "@/hooks/use-persistent-store";
+} from "@/hooks/use-api";
 import {
   Card,
   CardContent,
@@ -76,7 +76,10 @@ import {
   generateAttendancePDF,
   generateDateWiseAttendancePDF,
 } from "@/lib/pdf-generator";
+import { SUBJECTS_BY_DEPARTMENT } from "@/lib/subjects";
+import { Combobox } from "@/components/ui/combobox";
 import { mutate } from "swr";
+import { formatDate } from "@/lib/utils";
 
 export default function TeacherDashboard() {
   const router = useRouter();
@@ -115,7 +118,7 @@ export default function TeacherDashboard() {
 
     const formData = new FormData(e.currentTarget);
     const photoInput = document.getElementById(
-      "teacher-profile-photo-value"
+      "teacher-profile-photo-value",
     ) as HTMLInputElement;
 
     const data = {
@@ -150,16 +153,16 @@ export default function TeacherDashboard() {
 
   const activeNotices = notices.filter((n) => n.isActive);
   const deptStudents = students.filter(
-    (s) => s.department === teacher.department
+    (s) => s.department === teacher.department,
   );
   const deptProjects = projects.filter(
-    (p) => p.department === teacher.department
+    (p) => p.department === teacher.department,
   );
 
   return (
     <div className="min-h-screen bg-muted/30">
       {/* Header */}
-      <header className="bg-background border-b sticky top-0 z-50">
+      <header className="bg-background border-b border-border sticky top-0 z-50">
         <div className="container mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Image
@@ -171,7 +174,7 @@ export default function TeacherDashboard() {
               priority
             />
             <span className="font-semibold text-sm">Teacher Portal</span>
-            <Badge variant="outline" className="ml-2 text-xs">
+            <Badge variant="outline" className="ml-2 text-xs bg-muted">
               {teacher.department.split(" ")[0]}
             </Badge>
           </div>
@@ -402,7 +405,7 @@ function AttendanceTab({
   const { upsertAttendance } = useAttendance();
   const [activeSubTab, setActiveSubTab] = useState<"mark" | "history">("mark");
   const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().split("T")[0]
+    new Date().toISOString().split("T")[0],
   );
   const [subject, setSubject] = useState("");
   const [selectedSemester, setSelectedSemester] = useState<string>("all");
@@ -419,12 +422,12 @@ function AttendanceTab({
     return date.toISOString().split("T")[0];
   });
   const [historyEndDate, setHistoryEndDate] = useState(
-    new Date().toISOString().split("T")[0]
+    new Date().toISOString().split("T")[0],
   );
 
   // Get available semesters from students
   const availableSemesters = [...new Set(students.map((s) => s.semester))].sort(
-    (a, b) => a - b
+    (a, b) => a - b,
   );
 
   // Get unique subjects from attendance records
@@ -479,7 +482,7 @@ function AttendanceTab({
     }
 
     const unset = Object.values(attendanceData).filter(
-      (v) => v === null
+      (v) => v === null,
     ).length;
     if (unset > 0) {
       alert("Please set Present/Absent for all students");
@@ -494,7 +497,7 @@ function AttendanceTab({
           selectedDate,
           status as "present" | "absent",
           subject,
-          teacherId
+          teacherId,
         );
       }
       alert("Attendance saved successfully!");
@@ -521,13 +524,13 @@ function AttendanceTab({
     }
 
     const subjectAttendance = filteredAttendance.filter(
-      (a) => a.subject === historySubject
+      (a) => a.subject === historySubject,
     );
     const relevantStudentIds = [
       ...new Set(subjectAttendance.map((a) => a.studentId)),
     ];
     const relevantStudents = students.filter((s) =>
-      relevantStudentIds.includes(s.id)
+      relevantStudentIds.includes(s.id),
     );
 
     generateAttendancePDF({
@@ -544,13 +547,13 @@ function AttendanceTab({
   // Download date-wise PDF report
   function handleDownloadDateReport(date: string, subj: string) {
     const dateAttendance = attendance.filter(
-      (a) => a.date === date && a.subject === subj
+      (a) => a.date === date && a.subject === subj,
     );
     const relevantStudentIds = [
       ...new Set(dateAttendance.map((a) => a.studentId)),
     ];
     const relevantStudents = students.filter((s) =>
-      relevantStudentIds.includes(s.id)
+      relevantStudentIds.includes(s.id),
     );
 
     generateDateWiseAttendancePDF({
@@ -561,6 +564,29 @@ function AttendanceTab({
       attendance: dateAttendance,
     });
   }
+
+  // Get subjects for the department
+  const departmentSubjects = SUBJECTS_BY_DEPARTMENT[department] || [];
+
+  // Filter custom subjects to ensure they belong to this department
+  // This is done by checking if the subject was used in an attendance record
+  // associated with a student from this department
+  const deptCustomSubjects = uniqueSubjects.filter((subj) => {
+    // Check if this subject is used in any attendance record for this department's students
+    return attendance.some(
+      (a) =>
+        a.subject === subj &&
+        students.some(
+          (s) => s.id === a.studentId && s.department === department,
+        ),
+    );
+  });
+
+  // Combine department subjects with unique custom subjects from history
+  const allSubjects = [
+    ...departmentSubjects,
+    ...deptCustomSubjects.filter((s) => !departmentSubjects.includes(s)),
+  ].sort();
 
   return (
     <div className="space-y-6">
@@ -618,10 +644,13 @@ function AttendanceTab({
                 </div>
                 <div className="space-y-2">
                   <Label>Subject</Label>
-                  <Input
+                  <Combobox
+                    items={allSubjects}
                     value={subject}
-                    onChange={(e) => setSubject(e.target.value)}
-                    placeholder="e.g., Data Structures"
+                    onChange={setSubject}
+                    placeholder="Select or type subject"
+                    allowCustom={true}
+                    emptyText="No matching subject found"
                   />
                 </div>
               </div>
@@ -650,7 +679,7 @@ function AttendanceTab({
                 </span>
               </div>
 
-              <div className="border rounded-lg divide-y max-h-96 overflow-y-auto">
+              <div className="bg-background rounded-lg border border-border/40 divide-y divide-border/40 max-h-96 overflow-y-auto">
                 {filteredStudents.map((student, index) => (
                   <div
                     key={student.id}
@@ -768,22 +797,14 @@ function AttendanceTab({
               <div className="grid sm:grid-cols-4 gap-4">
                 <div className="space-y-2">
                   <Label>Subject</Label>
-                  <Select
-                    value={historySubject}
-                    onValueChange={setHistorySubject}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="All Subjects" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Subjects</SelectItem>
-                      {uniqueSubjects.map((subj) => (
-                        <SelectItem key={subj} value={subj}>
-                          {subj}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Combobox
+                    items={allSubjects}
+                    value={historySubject === "all" ? "" : historySubject}
+                    onChange={(val) => setHistorySubject(val || "all")}
+                    placeholder="All Subjects"
+                    allowCustom={false} // Only filtering existing records
+                    emptyText="No records found"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Start Date</Label>
@@ -824,7 +845,7 @@ function AttendanceTab({
                   Subject Summary: {historySubject}
                 </CardTitle>
                 <CardDescription>
-                  {historyStartDate} to {historyEndDate}
+                  {formatDate(historyStartDate)} to {formatDate(historyEndDate)}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -833,10 +854,10 @@ function AttendanceTab({
                     const studentAttendance = filteredAttendance.filter(
                       (a) =>
                         a.studentId === student.id &&
-                        a.subject === historySubject
+                        a.subject === historySubject,
                     );
                     const presentCount = studentAttendance.filter(
-                      (a) => a.status === "present"
+                      (a) => a.status === "present",
                     ).length;
                     const total = studentAttendance.length;
                     const percent =
@@ -845,7 +866,7 @@ function AttendanceTab({
                     return (
                       <div
                         key={student.id}
-                        className="flex items-center justify-between p-3 border rounded-lg"
+                        className="flex items-center justify-between p-3 border border-border/40 rounded-lg"
                       >
                         <div className="flex items-center gap-3">
                           <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center overflow-hidden">
@@ -910,27 +931,22 @@ function AttendanceTab({
                 {Object.entries(groupedAttendance)
                   .sort(([a], [b]) => b.localeCompare(a))
                   .map(([date, subjects]) => (
-                    <div key={date} className="border rounded-lg p-4">
+                    <div key={date} className="border border-border/40 rounded-lg p-4">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
                           <Calendar className="h-4 w-4 text-muted-foreground" />
                           <span className="font-medium">
-                            {new Date(date).toLocaleDateString("en-IN", {
-                              weekday: "long",
-                              year: "numeric",
-                              month: "long",
-                              day: "numeric",
-                            })}
+                            {formatDate(date)}
                           </span>
                         </div>
                       </div>
                       <div className="space-y-2">
                         {Object.entries(subjects).map(([subj, records]) => {
                           const presentCount = records.filter(
-                            (r) => r.status === "present"
+                            (r) => r.status === "present",
                           ).length;
                           const absentCount = records.filter(
-                            (r) => r.status === "absent"
+                            (r) => r.status === "absent",
                           ).length;
                           return (
                             <div
@@ -1482,7 +1498,7 @@ function NoticesTab({
                 </div>
               </div>
               <CardDescription>
-                {new Date(notice.publishedAt).toLocaleDateString()}
+                {formatDate(notice.publishedAt)}
               </CardDescription>
             </CardHeader>
             <CardContent>

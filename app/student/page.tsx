@@ -55,12 +55,9 @@ import {
 } from "lucide-react";
 import { FileUpload } from "@/components/ui/file-upload";
 import type { Student, Attendance, Notice, Project } from "@/lib/types";
-import {
-  useAttendance,
-  useNotices,
-  useProjects,
-} from "@/hooks/use-persistent-store";
+import { useAttendance, useNotices, useProjects } from "@/hooks/use-api";
 import { parseStudentRollNumber } from "@/lib/types";
+import { formatDate } from "@/lib/utils";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -81,7 +78,7 @@ export default function StudentDashboard() {
     deleteNotice,
     mutate: refreshNotices,
   } = useNotices();
-  const { data: projects } = useSWR<Project[]>("/api/projects", fetcher);
+
   const {
     projects: allProjects,
     addProject,
@@ -89,6 +86,7 @@ export default function StudentDashboard() {
     deleteProject,
     mutate: refreshProjects,
   } = useProjects();
+
   const { attendance } = useAttendance();
 
   useEffect(() => {
@@ -154,7 +152,7 @@ export default function StudentDashboard() {
 
     const formData = new FormData(e.currentTarget);
     const photoInput = document.getElementById(
-      "student-profile-photo-value"
+      "student-profile-photo-value",
     ) as HTMLInputElement;
 
     const data = {
@@ -188,13 +186,13 @@ export default function StudentDashboard() {
 
   const activeNotices = notices?.filter((n) => n.isActive)?.slice(0, 5) || [];
   const studentAttendance = (attendance || []).filter(
-    (a) => a.studentId === student.id
+    (a) => a.studentId === student.id,
   );
   const presentCount = studentAttendance.filter(
-    (a) => a.status === "present"
+    (a) => a.status === "present",
   ).length;
   const absentCount = studentAttendance.filter(
-    (a) => a.status === "absent"
+    (a) => a.status === "absent",
   ).length;
   const lateCount = studentAttendance.filter((a) => a.status === "late").length;
   const totalClasses = studentAttendance.length;
@@ -203,7 +201,7 @@ export default function StudentDashboard() {
 
   const rollInfo = parseStudentRollNumber(student.rollNumber);
   const deptProjects = (allProjects || []).filter(
-    (p) => p.department === student.department
+    (p) => p.department === student.department,
   );
 
   return (
@@ -357,8 +355,8 @@ export default function StudentDashboard() {
                               a.status === "present"
                                 ? "default"
                                 : a.status === "late"
-                                ? "outline"
-                                : "destructive"
+                                  ? "outline"
+                                  : "destructive"
                             }
                           >
                             {a.status}
@@ -577,7 +575,7 @@ export default function StudentDashboard() {
                           </div>
                         </div>
                         <CardDescription>
-                          {new Date(notice.publishedAt).toLocaleDateString()}
+                          {formatDate(notice.publishedAt)}
                         </CardDescription>
                       </CardHeader>
                       <CardContent>

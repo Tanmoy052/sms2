@@ -1,47 +1,71 @@
-import { NextResponse } from "next/server"
-import { persistentStore } from "@/lib/persistent-store"
+import { NextRequest, NextResponse } from "next/server";
+import {
+  getTeachersFromDB,
+  addTeacherToDB,
+  addTeacherCredential,
+  getTeacherCredentials,
+  generateUniqueTeacherCredentials,
+} from "@/lib/teacher-db";
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url)
-  const department = searchParams.get("department")
+export const dynamic = "force-dynamic";
 
-  let teachers = persistentStore.getTeachers()
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const department = searchParams.get("department");
 
-  if (department) {
-    teachers = teachers.filter((t) => t.department === department)
-  }
+  const teachers = await getTeachersFromDB();
+  const credentials = await getTeacherCredentials();
 
-  const credentials = persistentStore.getTeacherCredentials()
-
-  const teachersWithCredentials = teachers.map((teacher) => {
-    const cred = credentials.find((c) => c.teacherId === teacher.id)
-    const username =
-      cred?.username ||
-      teacher.name
-        .toLowerCase()
-        .replace(/^(dr\.|prof\.|mr\.|mrs\.|ms\.)\s*/i, "")
-        .trim()
-        .replace(/\s+/g, ".")
-
+  const teachersWithCreds = teachers.map((t) => {
+    const cred = credentials.find((c) => c.teacherId === t.id);
     return {
-      id: teacher.id,
-      name: teacher.name,
-      username,
-      department: teacher.department,
-      designation: teacher.designation,
-    }
-  })
+      ...t,
+      username: cred?.username || "",
+      password: cred?.password || "", // Include password for Admin view
+    };
+  });
 
   if (department) {
-    return NextResponse.json({ teachers: teachersWithCredentials })
+    const filteredTeachers = teachersWithCreds.filter(
+      (t) => t.department === department,
+    );
+    return NextResponse.json({ teachers: filteredTeachers });
   }
 
-  return NextResponse.json(teachers)
+  return NextResponse.json(teachersWithCreds);
 }
 
-export async function POST(request: Request) {
-  const data = await request.json()
-  // persistentStore.addTeacher automatically creates credentials
-  const teacher = persistentStore.addTeacher(data)
-  return NextResponse.json(teacher)
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+
+    // Add teacher to database
+    const newTeacher = await addTeacherToDB(body);
+
+    // Generate and add credentials
+    if (newTeacher && newTeacher.id) {
+      const { username, password } = await generateUniqueTeacherCredentials(
+        newTeacher.name,
+        newTeacher.department,
+      );
+
+      await addTeacherCredential({
+        teacherId: newTeacher.id,
+        username,
+        password,
+      });
+
+      console.log(
+        `Generated credentials for ${newTeacher.name}: ${username} / ${password}`,
+      );
+    }
+
+    return NextResponse.json(newTeacher, { status: 201 });
+  } catch (error) {
+    console.error("Error creating teacher:", error);
+    return NextResponse.json(
+      { error: "Failed to create teacher" },
+      { status: 500 },
+    );
+  }
 }

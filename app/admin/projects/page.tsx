@@ -1,19 +1,40 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { useProjects } from "@/hooks/use-persistent-store"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, Pencil, Trash2, FolderKanban, ExternalLink, Github, Globe, Eye } from "lucide-react"
-import type { Project } from "@/lib/types"
-import { DEPARTMENTS } from "@/lib/types"
+import { useState } from "react";
+import { useProjects } from "@/hooks/use-api";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  FolderKanban,
+  ExternalLink,
+  Github,
+  Globe,
+  Eye,
+} from "lucide-react";
+import type { Project } from "@/lib/types";
+import { DEPARTMENTS } from "@/lib/types";
 
 export default function ProjectsPage() {
   const {
@@ -23,66 +44,86 @@ export default function ProjectsPage() {
     updateProject,
     deleteProject,
     mutate: refreshProjects,
-  } = useProjects()
-  const [editProject, setEditProject] = useState<Project | null>(null)
-  const [viewProject, setViewProject] = useState<Project | null>(null)
-  const [isAddOpen, setIsAddOpen] = useState(false)
-  const [isEditOpen, setIsEditOpen] = useState(false)
-  const [isViewOpen, setIsViewOpen] = useState(false)
+  } = useProjects();
+  const [editProject, setEditProject] = useState<Project | null>(null);
+  const [viewProject, setViewProject] = useState<Project | null>(null);
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isViewOpen, setIsViewOpen] = useState(false);
 
   async function handleAdd(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    const formData = new FormData(e.currentTarget)
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
     const data = {
-      title: formData.get("title"),
-      description: formData.get("description"),
-      department: formData.get("department"),
+      title: formData.get("title") as string,
+      description: formData.get("description") as string,
+      department: formData.get("department") as string,
       year: Number.parseInt(formData.get("year") as string),
-      status: formData.get("status"),
-      technologies: (formData.get("technologies") as string).split(",").map((t) => t.trim()),
-      studentNames: (formData.get("studentNames") as string).split(",").map((t) => t.trim()),
-      demoUrl: formData.get("demoUrl") || undefined,
-      repoUrl: formData.get("repoUrl") || undefined,
-      githubUrl: formData.get("githubUrl") || undefined,
-      websiteUrl: formData.get("websiteUrl") || undefined,
+      status: formData.get("status") as "ongoing" | "completed",
+      technologies: (formData.get("technologies") as string)
+        .split(",")
+        .map((t) => t.trim()),
+      studentNames: (formData.get("studentNames") as string)
+        .split(",")
+        .map((t) => t.trim()),
+      demoUrl: (formData.get("demoUrl") as string) || undefined,
+      repoUrl: (formData.get("repoUrl") as string) || undefined,
+      githubUrl: (formData.get("githubUrl") as string) || undefined,
+      websiteUrl: (formData.get("websiteUrl") as string) || undefined,
       studentIds: [],
-    }
+    };
 
-    await addProject(data as any)
-    await refreshProjects()
-    setIsAddOpen(false)
+    try {
+      await addProject(data);
+      setIsAddOpen(false);
+    } catch (error) {
+      console.error("Failed to add project:", error);
+      alert("Failed to add project");
+    }
   }
 
   async function handleEdit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    if (!editProject) return
+    e.preventDefault();
+    if (!editProject) return;
 
-    const formData = new FormData(e.currentTarget)
+    const formData = new FormData(e.currentTarget);
     const data = {
-      title: formData.get("title"),
-      description: formData.get("description"),
-      department: formData.get("department"),
+      title: formData.get("title") as string,
+      description: formData.get("description") as string,
+      department: formData.get("department") as string,
       year: Number.parseInt(formData.get("year") as string),
-      status: formData.get("status"),
-      technologies: (formData.get("technologies") as string).split(",").map((t) => t.trim()),
-      studentNames: (formData.get("studentNames") as string).split(",").map((t) => t.trim()),
-      demoUrl: formData.get("demoUrl") || undefined,
-      repoUrl: formData.get("repoUrl") || undefined,
-      githubUrl: formData.get("githubUrl") || undefined,
-      websiteUrl: formData.get("websiteUrl") || undefined,
-    }
+      status: formData.get("status") as "ongoing" | "completed",
+      technologies: (formData.get("technologies") as string)
+        .split(",")
+        .map((t) => t.trim()),
+      studentNames: (formData.get("studentNames") as string)
+        .split(",")
+        .map((t) => t.trim()),
+      demoUrl: (formData.get("demoUrl") as string) || undefined,
+      repoUrl: (formData.get("repoUrl") as string) || undefined,
+      githubUrl: (formData.get("githubUrl") as string) || undefined,
+      websiteUrl: (formData.get("websiteUrl") as string) || undefined,
+    };
 
-    await updateProject(editProject.id, data as any)
-    await refreshProjects()
-    setIsEditOpen(false)
-    setEditProject(null)
+    try {
+      await updateProject(editProject.id, data);
+      setIsEditOpen(false);
+      setEditProject(null);
+    } catch (error) {
+      console.error("Failed to update project:", error);
+      alert("Failed to update project");
+    }
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("Are you sure you want to delete this project?")) return
+    if (!confirm("Are you sure you want to delete this project?")) return;
 
-    await deleteProject(id)
-    await refreshProjects()
+    try {
+      await deleteProject(id);
+    } catch (error) {
+      console.error("Failed to delete project:", error);
+      alert("Failed to delete project");
+    }
   }
 
   return (
@@ -90,7 +131,9 @@ export default function ProjectsPage() {
       <div className="flex flex-col sm:flex-row justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Projects</h1>
-          <p className="text-sm text-muted-foreground">Manage student projects</p>
+          <p className="text-sm text-muted-foreground">
+            Manage student projects
+          </p>
         </div>
         <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
           <DialogTrigger asChild>
@@ -122,7 +165,9 @@ export default function ProjectsPage() {
                     </div>
                     <div>
                       <h3 className="font-semibold">{project.title}</h3>
-                      <p className="text-xs text-muted-foreground">{project.department}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {project.department}
+                      </p>
                     </div>
                   </div>
                   <div className="flex gap-1">
@@ -130,8 +175,8 @@ export default function ProjectsPage() {
                       variant="ghost"
                       size="icon"
                       onClick={() => {
-                        setViewProject(project)
-                        setIsViewOpen(true)
+                        setViewProject(project);
+                        setIsViewOpen(true);
                       }}
                     >
                       <Eye className="h-4 w-4" />
@@ -140,26 +185,37 @@ export default function ProjectsPage() {
                       variant="ghost"
                       size="icon"
                       onClick={() => {
-                        setEditProject(project)
-                        setIsEditOpen(true)
+                        setEditProject(project);
+                        setIsEditOpen(true);
                       }}
                     >
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(project.id)}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDelete(project.id)}
+                    >
                       <Trash2 className="h-4 w-4 text-red-500" />
                     </Button>
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{project.description}</p>
+                <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                  {project.description}
+                </p>
                 {project.studentNames && project.studentNames.length > 0 && (
-                  <p className="text-xs text-muted-foreground mb-2">By: {project.studentNames.join(", ")}</p>
+                  <p className="text-xs text-muted-foreground mb-2">
+                    By: {project.studentNames.join(", ")}
+                  </p>
                 )}
                 <div className="flex flex-wrap gap-1 mb-3">
                   {project.technologies.map((tech) => (
-                    <span key={tech} className="px-2 py-0.5 bg-muted rounded text-xs">
+                    <span
+                      key={tech}
+                      className="px-2 py-0.5 bg-muted rounded text-xs"
+                    >
                       {tech}
                     </span>
                   ))}
@@ -172,24 +228,48 @@ export default function ProjectsPage() {
                   </span>
                   <div className="flex gap-2">
                     {project.githubUrl && (
-                      <a href={project.githubUrl} target="_blank" rel="noopener noreferrer">
-                        <Button variant="ghost" size="sm" className="h-7 text-xs">
+                      <a
+                        href={project.githubUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs"
+                        >
                           <Github className="h-3 w-3 mr-1" />
                           GitHub
                         </Button>
                       </a>
                     )}
                     {project.websiteUrl && (
-                      <a href={project.websiteUrl} target="_blank" rel="noopener noreferrer">
-                        <Button variant="ghost" size="sm" className="h-7 text-xs">
+                      <a
+                        href={project.websiteUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs"
+                        >
                           <Globe className="h-3 w-3 mr-1" />
                           Website
                         </Button>
                       </a>
                     )}
                     {project.demoUrl && (
-                      <a href={project.demoUrl} target="_blank" rel="noopener noreferrer">
-                        <Button variant="ghost" size="sm" className="h-7 text-xs">
+                      <a
+                        href={project.demoUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs"
+                        >
                           <ExternalLink className="h-3 w-3 mr-1" />
                           Demo
                         </Button>
@@ -202,7 +282,9 @@ export default function ProjectsPage() {
           ))}
           {projects?.length === 0 && (
             <Card className="col-span-2">
-              <CardContent className="py-8 text-center text-muted-foreground">No projects found</CardContent>
+              <CardContent className="py-8 text-center text-muted-foreground">
+                No projects found
+              </CardContent>
             </Card>
           )}
         </div>
@@ -213,7 +295,9 @@ export default function ProjectsPage() {
           <DialogHeader>
             <DialogTitle>Edit Project</DialogTitle>
           </DialogHeader>
-          {editProject && <ProjectForm project={editProject} onSubmit={handleEdit} />}
+          {editProject && (
+            <ProjectForm project={editProject} onSubmit={handleEdit} />
+          )}
         </DialogContent>
       </Dialog>
 
@@ -231,17 +315,23 @@ export default function ProjectsPage() {
                 </p>
               </div>
               <p className="text-sm">{viewProject.description}</p>
-              {viewProject.studentNames && viewProject.studentNames.length > 0 && (
-                <div>
-                  <p className="text-sm font-medium">Team Members:</p>
-                  <p className="text-sm text-muted-foreground">{viewProject.studentNames.join(", ")}</p>
-                </div>
-              )}
+              {viewProject.studentNames &&
+                viewProject.studentNames.length > 0 && (
+                  <div>
+                    <p className="text-sm font-medium">Team Members:</p>
+                    <p className="text-sm text-muted-foreground">
+                      {viewProject.studentNames.join(", ")}
+                    </p>
+                  </div>
+                )}
               <div>
                 <p className="text-sm font-medium mb-2">Technologies:</p>
                 <div className="flex flex-wrap gap-2">
                   {viewProject.technologies.map((tech) => (
-                    <span key={tech} className="px-2 py-1 bg-muted rounded text-xs">
+                    <span
+                      key={tech}
+                      className="px-2 py-1 bg-muted rounded text-xs"
+                    >
                       {tech}
                     </span>
                   ))}
@@ -249,7 +339,11 @@ export default function ProjectsPage() {
               </div>
               <div className="flex flex-wrap gap-2 pt-4 border-t">
                 {viewProject.githubUrl && (
-                  <a href={viewProject.githubUrl} target="_blank" rel="noopener noreferrer">
+                  <a
+                    href={viewProject.githubUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     <Button variant="outline" size="sm">
                       <Github className="h-4 w-4 mr-2" />
                       GitHub
@@ -257,7 +351,11 @@ export default function ProjectsPage() {
                   </a>
                 )}
                 {viewProject.websiteUrl && (
-                  <a href={viewProject.websiteUrl} target="_blank" rel="noopener noreferrer">
+                  <a
+                    href={viewProject.websiteUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     <Button variant="outline" size="sm">
                       <Globe className="h-4 w-4 mr-2" />
                       Website
@@ -265,7 +363,11 @@ export default function ProjectsPage() {
                   </a>
                 )}
                 {viewProject.demoUrl && (
-                  <a href={viewProject.demoUrl} target="_blank" rel="noopener noreferrer">
+                  <a
+                    href={viewProject.demoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     <Button variant="outline" size="sm">
                       <ExternalLink className="h-4 w-4 mr-2" />
                       Demo
@@ -278,15 +380,15 @@ export default function ProjectsPage() {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }
 
 function ProjectForm({
   project,
   onSubmit,
 }: {
-  project?: Project
-  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void
+  project?: Project;
+  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
 }) {
   return (
     <form onSubmit={onSubmit} className="space-y-4">
@@ -296,7 +398,13 @@ function ProjectForm({
       </div>
       <div className="space-y-2">
         <Label htmlFor="description">Description</Label>
-        <Textarea id="description" name="description" rows={3} defaultValue={project?.description} required />
+        <Textarea
+          id="description"
+          name="description"
+          rows={3}
+          defaultValue={project?.description}
+          required
+        />
       </div>
       <div className="space-y-2">
         <Label htmlFor="studentNames">Student Names (comma separated)</Label>
@@ -310,7 +418,10 @@ function ProjectForm({
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="department">Department</Label>
-          <Select name="department" defaultValue={project?.department || DEPARTMENTS[0]}>
+          <Select
+            name="department"
+            defaultValue={project?.department || DEPARTMENTS[0]}
+          >
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
@@ -336,7 +447,12 @@ function ProjectForm({
       </div>
       <div className="space-y-2">
         <Label htmlFor="technologies">Technologies (comma separated)</Label>
-        <Input id="technologies" name="technologies" defaultValue={project?.technologies.join(", ")} required />
+        <Input
+          id="technologies"
+          name="technologies"
+          defaultValue={project?.technologies.join(", ")}
+          required
+        />
       </div>
       <div className="space-y-2">
         <Label htmlFor="status">Status</Label>
@@ -372,11 +488,16 @@ function ProjectForm({
       </div>
       <div className="space-y-2">
         <Label htmlFor="demoUrl">Demo URL (optional)</Label>
-        <Input id="demoUrl" name="demoUrl" type="url" defaultValue={project?.demoUrl} />
+        <Input
+          id="demoUrl"
+          name="demoUrl"
+          type="url"
+          defaultValue={project?.demoUrl}
+        />
       </div>
       <div className="flex justify-end">
         <Button type="submit">{project ? "Update" : "Add"} Project</Button>
       </div>
     </form>
-  )
+  );
 }

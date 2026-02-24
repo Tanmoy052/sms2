@@ -1,6 +1,9 @@
-import Link from "next/link";
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
+'use client';
+
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { Button } from '@/components/ui/button';
 import {
   Users,
   BookOpen,
@@ -11,50 +14,99 @@ import {
   Phone,
   Mail,
   GraduationCap,
-} from "lucide-react";
-import { COLLEGE_INFO, STATISTICS, DEPARTMENTS } from "@/lib/config";
+  MoreVertical,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { COLLEGE_INFO, STATISTICS, DEPARTMENTS } from '@/lib/config';
+import { cn } from '@/lib/utils';
 
 const COLLEGE_IMAGES = {
-  background: "/images/cgec-acdemic.jpeg",
-  logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS-6jybyzr1r5WRLGCSQ4h5arS8GijNfgo7GA&s",
+  background: '/images/cgec-acdemic.jpeg',
+  logo: '/images/cgec-logo.png',
 };
+
+type HeroSlide = {
+  id: number;
+  image: string;
+  title: string;
+  description: string;
+  align?: 'center' | 'left';
+};
+
+const HERO_SLIDES: HeroSlide[] = [
+  {
+    id: 1,
+    image: COLLEGE_IMAGES.background,
+    title: 'Student Management System',
+    description:
+      'A comprehensive platform for managing student records, attendance, academic projects, and institutional notices. Empowering education through technology.',
+    align: 'center',
+  },
+];
 
 const features = [
   {
     icon: Users,
-    title: "Student Management",
+    title: 'Student Management',
     description:
-      "Comprehensive student profiles with academic records and personal information.",
+      'Comprehensive student profiles with academic records and personal information.',
   },
   {
     icon: Calendar,
-    title: "Attendance Tracking",
+    title: 'Attendance Tracking',
     description:
-      "Real-time attendance management with detailed reports and analytics.",
+      'Real-time attendance management with detailed reports and analytics.',
   },
   {
     icon: BookOpen,
-    title: "Project Repository",
+    title: 'Project Repository',
     description:
-      "Showcase student projects with descriptions, technologies, and live demos.",
+      'Showcase student projects with descriptions, technologies, and live demos.',
   },
   {
     icon: Award,
-    title: "Academic Excellence",
+    title: 'Academic Excellence',
     description:
-      "Track performance, grades, and achievements throughout the academic journey.",
+      'Track performance, grades, and achievements throughout the academic journey.',
   },
 ];
 
 export function LandingHero() {
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      setActiveIndex((prev) => (prev + 1) % HERO_SLIDES.length);
+    }, 8000);
+
+    return () => window.clearInterval(id);
+  }, []);
+
+  const currentSlide = HERO_SLIDES[activeIndex];
+
+  const goToNext = () => {
+    setActiveIndex((prev) => (prev + 1) % HERO_SLIDES.length);
+  };
+
+  const goToPrev = () => {
+    setActiveIndex((prev) => (prev === 0 ? HERO_SLIDES.length - 1 : prev - 1));
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b bg-white/90 backdrop-blur-sm sticky top-0 z-50 shadow-sm">
+      <header className="bg-white/90 backdrop-blur-sm sticky top-0 z-50 shadow-sm">
         <div className="container mx-auto px-4 h-12 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Image
-              src={COLLEGE_IMAGES.logo || "/placeholder.svg"}
+              src={COLLEGE_IMAGES.logo || '/placeholder.svg'}
               alt="CGEC Logo"
               width={36}
               height={36}
@@ -68,33 +120,101 @@ export function LandingHero() {
               </span>
             </div>
           </div>
-          <Link href="/login">
-            <Button size="sm" className="gap-1.5">
-              Access Portal
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Button>
-          </Link>
+          <div className="flex items-center gap-4 md:gap-6">
+            <nav className="hidden md:flex items-center gap-6">
+              <Link
+                href="https://cgec.org.in/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm font-semibold text-gray-700 hover:text-blue-700 transition-colors"
+              >
+                Visit Website
+              </Link>
+              <Link
+                href="/notices"
+                className="text-sm font-semibold text-gray-700 hover:text-blue-700 transition-colors"
+              >
+                Notices
+              </Link>
+              <Link
+                href="/projects"
+                className="text-sm font-semibold text-gray-700 hover:text-blue-700 transition-colors"
+              >
+                Projects
+              </Link>
+            </nav>
+            <div className="md:hidden">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <MoreVertical className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem asChild>
+                    <Link
+                      href="https://cgec.org.in/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="cursor-pointer"
+                    >
+                      Visit Website
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/notices" className="cursor-pointer">
+                      Notices
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/projects" className="cursor-pointer">
+                      Projects
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+            <Link href="/login">
+              <Button size="sm" className="gap-1.5">
+                Access Portal
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Button>
+            </Link>
+          </div>
         </div>
       </header>
 
       {/* Hero Section */}
       <section className="relative min-h-[560px] md:min-h-[600px] flex items-end justify-center overflow-hidden">
-        <div className="absolute inset-0">
-          <Image
-            src={COLLEGE_IMAGES.background || "/placeholder.svg"}
-            alt="CGEC Academic Building"
-            fill
-            className="object-cover"
-            priority
-            sizes="100vw"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+        <div className="absolute inset-0" style={{ perspective: '1000px' }}>
+          <div
+            className="relative w-full h-full transition-transform duration-700 transform-gpu"
+            style={{ transform: `rotateY(${activeIndex * 180}deg)` }}
+          >
+            {HERO_SLIDES.map((slide, index) => (
+              <div
+                key={slide.id}
+                className="absolute inset-0 backface-hidden"
+                style={{ transform: `rotateY(${index * 180}deg)` }}
+              >
+                <Image
+                  src={slide.image || '/placeholder.svg'}
+                  alt="slide image"
+                  fill
+                  className="object-cover brightness-110 saturate-99"
+                  priority={index === 0}
+                  sizes="100vw"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/22 to-transparent" />
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="absolute top-4 left-0 right-0 z-10 flex justify-center">
-          <div className="inline-flex items-center gap-3 px-4 py-2 bg-white/95 backdrop-blur-sm rounded-full shadow-lg border border-primary/20">
+          <div className="inline-flex items-center gap-3 px-4 py-2 bg-white/95 backdrop-blur-sm rounded-full shadow-lg">
             <Image
-              src={COLLEGE_IMAGES.logo || "/placeholder.svg"}
+              src={COLLEGE_IMAGES.logo || '/placeholder.svg'}
               alt="CGEC Logo"
               width={40}
               height={40}
@@ -107,33 +227,97 @@ export function LandingHero() {
           </div>
         </div>
 
-        <div className="relative z-10 container mx-auto px-4 py-10 text-center">
-          <div className="max-w-3xl mx-auto space-y-4">
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-balance text-white [text-shadow:_2px_2px_8px_rgba(0,0,0,0.8),_0_0_20px_rgba(0,0,0,0.5)]">
-              Student Management System
-            </h1>
-            <p className="text-base md:text-lg text-white font-medium max-w-2xl mx-auto text-pretty [text-shadow:_1px_1px_6px_rgba(0,0,0,0.8),_0_0_15px_rgba(0,0,0,0.4)]">
-              A comprehensive platform for managing student records, attendance,
-              academic projects, and institutional notices. Empowering education
-              through technology.
-            </p>
-            <div className="flex gap-3 justify-center pt-3">
-              <Link href="/login">
-                <Button size="default" className="gap-2 shadow-xl">
-                  Access Portal
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-              <Link href="/projects">
-                <Button
-                  size="default"
-                  variant="outline"
-                  className="shadow-xl bg-white hover:bg-white/90 text-primary border-white"
+        {/* Slide controls */}
+        <button
+          type="button"
+          aria-label="Previous slide"
+          className="absolute left-3 md:left-6 top-1/2 z-20 -translate-y-1/2 rounded-full bg-white/80 hover:bg-white shadow-md p-2 text-slate-700"
+          onClick={goToPrev}
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+        <button
+          type="button"
+          aria-label="Next slide"
+          className="absolute right-3 md:right-6 top-1/2 z-20 -translate-y-1/2 rounded-full bg-white/80 hover:bg-white shadow-md p-2 text-slate-700"
+          onClick={goToNext}
+        >
+          <ChevronRight className="h-5 w-5" />
+        </button>
+
+        <div className="relative z-10 container mx-auto px-4 py-10">
+          <div
+            className={cn(
+              'max-w-3xl space-y-4',
+              currentSlide.align === 'center'
+                ? 'mx-auto text-center'
+                : 'ml-0 mr-auto text-left'
+            )}
+          >
+            {currentSlide.showText !== false && (
+              <>
+                <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-balance text-white [text-shadow:_2px_2px_8px_rgba(0,0,0,0.8),_0_0_20px_rgba(0,0,0,0.5)]">
+                  {currentSlide.title}
+                </h1>
+                <p className="text-base md:text-lg text-white font-medium max-w-2xl text-pretty [text-shadow:_1px_1px_6px_rgba(0,0,0,0.8),_0_0_15px_rgba(0,0,0,0.4)]">
+                  {currentSlide.description}
+                </p>
+              </>
+            )}
+            <div
+              className={cn(
+                'flex gap-3 pt-3',
+                currentSlide.align === 'center'
+                  ? 'justify-center'
+                  : 'justify-start'
+              )}
+            >
+              {activeIndex === 0 ? (
+                <>
+                  <Link href="/login">
+                    <Button size="default" className="gap-2 shadow-xl">
+                      Access Portal
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                  <Link href="/projects">
+                    <Button
+                      size="default"
+                      variant="outline"
+                      className="shadow-xl bg-white hover:bg-white/90 text-primary border-white"
+                    >
+                      View Projects
+                    </Button>
+                  </Link>
+                </>
+              ) : (
+                <Link
+                  href="https://cgec.org.in/"
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
-                  View Projects
-                </Button>
-              </Link>
+                  <Button size="default" className="gap-2 shadow-xl">
+                    Know More
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              )}
             </div>
+          </div>
+
+          <div className="mt-6 flex justify-center gap-2">
+            {HERO_SLIDES.map((slide, index) => (
+              <button
+                key={slide.id}
+                type="button"
+                aria-label={`Go to slide ${index + 1}`}
+                onClick={() => setActiveIndex(index)}
+                className={cn(
+                  'h-1.5 w-4 rounded-full bg-white/40 transition-all',
+                  index === activeIndex && 'w-6 bg-white'
+                )}
+              />
+            ))}
           </div>
         </div>
       </section>
@@ -232,7 +416,7 @@ export function LandingHero() {
       </section>
 
       <section className="container mx-auto px-4 pb-12">
-        <div className="rounded-2xl p-8 bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/10">
+        <div className="rounded-2xl p-8 bg-gradient-to-br from-primary/10 to-primary/5">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="max-w-xl">
               <h3 className="text-xl font-semibold mb-2 text-foreground">
@@ -267,7 +451,7 @@ export function LandingHero() {
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <Image
-                  src={COLLEGE_IMAGES.logo || "/placeholder.svg"}
+                  src={COLLEGE_IMAGES.logo || '/placeholder.svg'}
                   alt="CGEC Logo"
                   width={48}
                   height={48}

@@ -1,29 +1,30 @@
 // PDF Generator utility for attendance reports
-import type { Student, Attendance } from "./types"
+import type { Student, Attendance } from "./types";
+import { formatDate } from "@/lib/utils";
 
 interface AttendanceReportData {
-  subject: string
-  department: string
-  startDate: string
-  endDate: string
-  students: Student[]
-  attendance: Attendance[]
+  subject: string;
+  department: string;
+  startDate: string;
+  endDate: string;
+  students: Student[];
+  attendance: Attendance[];
 }
 
 export function generateAttendancePDF(data: AttendanceReportData): void {
-  const { subject, department, startDate, endDate, students, attendance } = data
+  const { subject, department, startDate, endDate, students, attendance } = data;
 
   // Get unique dates from attendance records within the date range
-  const dates = [...new Set(attendance.map((a) => a.date))].sort()
+  const dates = [...new Set(attendance.map((a) => a.date))].sort();
 
   // Build student attendance matrix
   const studentData = students.map((student) => {
-    const studentAttendance = attendance.filter((a) => a.studentId === student.id)
-    const presentCount = studentAttendance.filter((a) => a.status === "present").length
-    const absentCount = studentAttendance.filter((a) => a.status === "absent").length
-    const lateCount = studentAttendance.filter((a) => a.status === "late").length
-    const total = studentAttendance.length
-    const percentage = total > 0 ? Math.round((presentCount / total) * 100) : 0
+    const studentAttendance = attendance.filter((a) => a.studentId === student.id);
+    const presentCount = studentAttendance.filter((a) => a.status === "present").length;
+    const absentCount = studentAttendance.filter((a) => a.status === "absent").length;
+    const lateCount = studentAttendance.filter((a) => a.status === "late").length;
+    const total = studentAttendance.length;
+    const percentage = total > 0 ? Math.round((presentCount / total) * 100) : 0;
 
     return {
       name: student.name,
@@ -35,11 +36,15 @@ export function generateAttendancePDF(data: AttendanceReportData): void {
       total,
       percentage,
       dailyStatus: dates.map((date) => {
-        const record = studentAttendance.find((a) => a.date === date)
-        return record ? record.status : "-"
+        const record = studentAttendance.find((a) => a.date === date);
+        return record ? record.status : "-";
       }),
-    }
-  })
+    };
+  });
+
+  const totalPresent = studentData.reduce((sum, s) => sum + s.presentCount, 0);
+  const totalAbsent = studentData.reduce((sum, s) => sum + s.absentCount, 0);
+  const totalLate = studentData.reduce((sum, s) => sum + s.lateCount, 0);
 
   // Create printable HTML content
   const printContent = `
@@ -69,12 +74,13 @@ export function generateAttendancePDF(data: AttendanceReportData): void {
         .percentage { font-weight: bold; }
         .percentage.high { color: #166534; }
         .percentage.low { color: #991b1b; }
-        .summary { margin-top: 20px; padding: 15px; background: #f0f9ff; border-radius: 5px; }
-        .summary h3 { font-size: 14px; margin-bottom: 10px; }
-        .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-        .summary-item { text-align: center; padding: 10px; background: white; border-radius: 5px; }
-        .summary-item strong { display: block; font-size: 18px; color: #1e40af; }
-        .summary-item span { font-size: 10px; color: #666; }
+        .summary { margin-top: 20px; display: flex; gap: 20px; justify-content: center; }
+        .summary-item { padding: 15px 30px; border-radius: 5px; text-align: center; }
+        .summary-item.present-bg { background: #dcfce7; }
+        .summary-item.absent-bg { background: #fee2e2; }
+        .summary-item.late-bg { background: #fef3c7; }
+        .summary-item strong { display: block; font-size: 24px; color: #1e40af; }
+        .summary-item span { font-size: 12px; color: #666; }
         .footer { margin-top: 30px; text-align: center; font-size: 10px; color: #666; border-top: 1px solid #ddd; padding-top: 15px; }
         @media print {
           body { padding: 10px; }
@@ -85,11 +91,15 @@ export function generateAttendancePDF(data: AttendanceReportData): void {
     <body>
       <div class="header">
         <h1>COOCH BEHAR GOVERNMENT ENGINEERING COLLEGE</h1>
-        <h2>Attendance Report</h2>
-        <p>Generated on ${new Date().toLocaleDateString("en-IN", { dateStyle: "full" })}</p>
+        <h2>Subject-wise Attendance Report</h2>
+        <p>Generated on ${new Date().toLocaleDateString("en-IN", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
       </div>
       
       <div class="info-row">
+        <div class="info-item">
+          <strong>Period</strong>
+          <span>${formatDate(startDate)} - ${formatDate(endDate)}</span>
+        </div>
         <div class="info-item">
           <strong>Subject</strong>
           <span>${subject}</span>
@@ -97,10 +107,6 @@ export function generateAttendancePDF(data: AttendanceReportData): void {
         <div class="info-item">
           <strong>Department</strong>
           <span>${department}</span>
-        </div>
-        <div class="info-item">
-          <strong>Period</strong>
-          <span>${new Date(startDate).toLocaleDateString("en-IN")} - ${new Date(endDate).toLocaleDateString("en-IN")}</span>
         </div>
         <div class="info-item">
           <strong>Total Classes</strong>
@@ -113,9 +119,9 @@ export function generateAttendancePDF(data: AttendanceReportData): void {
           <tr>
             <th>#</th>
             <th class="student-name">Student Name</th>
-            <th>Roll No.</th>
-            <th>Sem</th>
-            ${dates.map((d) => `<th>${new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}</th>`).join("")}
+            <th>Roll Number</th>
+            <th>Semester</th>
+            ${dates.map((d) => `<th>${new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit" })}</th>`).join("")}
             <th>P</th>
             <th>A</th>
             <th>L</th>
@@ -144,68 +150,62 @@ export function generateAttendancePDF(data: AttendanceReportData): void {
       </table>
 
       <div class="summary">
-        <h3>Summary</h3>
-        <div class="summary-grid">
-          <div class="summary-item">
-            <strong>${students.length}</strong>
-            <span>Total Students</span>
-          </div>
-          <div class="summary-item">
-            <strong>${dates.length}</strong>
-            <span>Total Classes</span>
-          </div>
-          <div class="summary-item">
-            <strong>${studentData.filter((s) => s.percentage >= 75).length}</strong>
-            <span>Above 75%</span>
-          </div>
-          <div class="summary-item">
-            <strong>${studentData.filter((s) => s.percentage < 75).length}</strong>
-            <span>Below 75%</span>
-          </div>
+        <div class="summary-item present-bg">
+          <strong>${totalPresent}</strong>
+          <span>Total Present</span>
+        </div>
+        <div class="summary-item absent-bg">
+          <strong>${totalAbsent}</strong>
+          <span>Total Absent</span>
+        </div>
+        <div class="summary-item late-bg">
+          <strong>${totalLate}</strong>
+          <span>Total Late</span>
         </div>
       </div>
 
       <div class="footer">
         <p>This is a computer-generated report from CGEC Student Management System</p>
+        <p style="margin-top: 30px;">Teacher's Signature: _______________________</p>
       </div>
     </body>
     </html>
-  `
+  `;
 
   // Open print dialog
-  const printWindow = window.open("", "_blank")
+  const printWindow = window.open("", "_blank");
   if (printWindow) {
-    printWindow.document.write(printContent)
-    printWindow.document.close()
-    printWindow.focus()
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.focus();
     setTimeout(() => {
-      printWindow.print()
-    }, 250)
+      printWindow.print();
+    }, 250);
   }
 }
 
 export function generateDateWiseAttendancePDF(data: {
-  date: string
-  subject: string
-  department: string
-  students: Student[]
-  attendance: Attendance[]
+  date: string;
+  subject: string;
+  department: string;
+  students: Student[];
+  attendance: Attendance[];
 }): void {
-  const { date, subject, department, students, attendance } = data
+  const { date, subject, department, students, attendance } = data;
 
   const studentData = students.map((student) => {
-    const record = attendance.find((a) => a.studentId === student.id)
+    const record = attendance.find((a) => a.studentId === student.id);
     return {
       name: student.name,
       rollNumber: student.rollNumber,
       semester: student.semester,
       status: record?.status || "not-marked",
-    }
-  })
+    };
+  });
 
-  const presentCount = studentData.filter((s) => s.status === "present").length
-  const absentCount = studentData.filter((s) => s.status === "absent").length
-  const lateCount = studentData.filter((s) => s.status === "late").length
+  const presentCount = studentData.filter((s) => s.status === "present").length;
+  const absentCount = studentData.filter((s) => s.status === "absent").length;
+  const lateCount = studentData.filter((s) => s.status === "late").length;
 
   const printContent = `
     <!DOCTYPE html>
@@ -252,7 +252,7 @@ export function generateDateWiseAttendancePDF(data: {
       <div class="info-row">
         <div class="info-item">
           <strong>Date</strong>
-          <span>${new Date(date).toLocaleDateString("en-IN", { dateStyle: "long" })}</span>
+          <span>${formatDate(date)}</span>
         </div>
         <div class="info-item">
           <strong>Subject</strong>
@@ -316,15 +316,15 @@ export function generateDateWiseAttendancePDF(data: {
       </div>
     </body>
     </html>
-  `
+  `;
 
-  const printWindow = window.open("", "_blank")
+  const printWindow = window.open("", "_blank");
   if (printWindow) {
-    printWindow.document.write(printContent)
-    printWindow.document.close()
-    printWindow.focus()
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.focus();
     setTimeout(() => {
-      printWindow.print()
-    }, 250)
+      printWindow.print();
+    }, 250);
   }
 }

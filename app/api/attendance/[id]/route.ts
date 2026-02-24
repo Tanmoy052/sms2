@@ -1,49 +1,50 @@
+import { NextRequest, NextResponse } from "next/server";
 import {
   updateAttendanceInDB,
   deleteAttendanceFromDB,
 } from "@/lib/attendance-db";
 
 export async function PUT(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
 ) {
-  const { id } = await params;
-  const data = await request.json();
-
   try {
-    const updated = await updateAttendanceInDB(id, data);
+    const { id } = await params;
+    const body = await request.json();
+    const updated = await updateAttendanceInDB(id, body);
     if (!updated) {
-      return Response.json({ error: "Not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Attendance record not found" },
+        { status: 404 },
+      );
     }
-
-    return Response.json(updated);
+    return NextResponse.json(updated);
   } catch (error) {
-    console.error("Error updating attendance:", error);
-    return Response.json(
+    return NextResponse.json(
       { error: "Failed to update attendance" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
 ) {
-  const { id } = await params;
-
   try {
-    const deleted = await deleteAttendanceFromDB(id);
-    if (!deleted) {
-      return Response.json({ error: "Not found" }, { status: 404 });
+    const { id } = await params;
+    const success = await deleteAttendanceFromDB(id);
+    if (!success) {
+      return NextResponse.json(
+        { error: "Attendance record not found" },
+        { status: 404 },
+      );
     }
-
-    return Response.json({ success: true });
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error deleting attendance:", error);
-    return Response.json(
+    return NextResponse.json(
       { error: "Failed to delete attendance" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -1,66 +1,83 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useEffect, useCallback } from "react"
-import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Plus, Pencil, Trash2, Search, User, RefreshCw } from "lucide-react"
-import { FileUpload } from "@/components/ui/file-upload"
-import { persistentStore } from "@/lib/persistent-store"
-import type { Student } from "@/lib/types"
-import { DEPARTMENTS } from "@/lib/types"
+import { useState } from "react";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Plus, Pencil, Trash2, Search, User, RefreshCw } from "lucide-react";
+import { FileUpload } from "@/components/ui/file-upload";
+import { useStudents } from "@/hooks/use-api";
+import type { Student } from "@/lib/types";
+import { DEPARTMENTS } from "@/lib/types";
 
 export default function StudentsPage() {
-  const [students, setStudents] = useState<Student[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [search, setSearch] = useState("")
-  const [editStudent, setEditStudent] = useState<Student | null>(null)
-  const [isAddOpen, setIsAddOpen] = useState(false)
-  const [isEditOpen, setIsEditOpen] = useState(false)
-  const [selectedDept, setSelectedDept] = useState<string>("all")
-  const [selectedSemester, setSelectedSemester] = useState<string>("all")
-
-  // Load students from persistent store
-  const loadStudents = useCallback(() => {
-    setIsLoading(true)
-    const data = persistentStore.getStudents()
-    setStudents(data)
-    setIsLoading(false)
-  }, [])
-
-  useEffect(() => {
-    const id = window.setTimeout(() => {
-      loadStudents()
-    }, 0)
-    return () => window.clearTimeout(id)
-  }, [loadStudents])
+  const {
+    students,
+    isLoading,
+    addStudent,
+    updateStudent,
+    deleteStudent,
+    mutate,
+  } = useStudents();
+  const [search, setSearch] = useState("");
+  const [editStudent, setEditStudent] = useState<Student | null>(null);
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [selectedDept, setSelectedDept] = useState<string>("all");
+  const [selectedSemester, setSelectedSemester] = useState<string>("all");
 
   const filteredStudents = students.filter((s) => {
     const matchesSearch =
       s.name.toLowerCase().includes(search.toLowerCase()) ||
       s.rollNumber.toLowerCase().includes(search.toLowerCase()) ||
-      s.department.toLowerCase().includes(search.toLowerCase())
-    const matchesDept = selectedDept === "all" || s.department === selectedDept
-    const matchesSemester = selectedSemester === "all" || s.semester.toString() === selectedSemester
-    return matchesSearch && matchesDept && matchesSemester
-  })
+      s.department.toLowerCase().includes(search.toLowerCase());
+    const matchesDept = selectedDept === "all" || s.department === selectedDept;
+    const matchesSemester =
+      selectedSemester === "all" || s.semester.toString() === selectedSemester;
+    return matchesSearch && matchesDept && matchesSemester;
+  });
 
   const availableSemesters = [
-    ...new Set(students.filter((s) => selectedDept === "all" || s.department === selectedDept).map((s) => s.semester)),
-  ].sort((a, b) => a - b)
+    ...new Set(
+      students
+        .filter((s) => selectedDept === "all" || s.department === selectedDept)
+        .map((s) => s.semester),
+    ),
+  ].sort((a, b) => a - b);
 
   async function handleAdd(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    const formData = new FormData(e.currentTarget)
-    const photoInput = document.getElementById("add-photo-value") as HTMLInputElement
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const photoInput = document.getElementById(
+      "add-photo-value",
+    ) as HTMLInputElement;
 
     const studentData = {
       name: formData.get("name") as string,
@@ -76,28 +93,25 @@ export default function StudentsPage() {
       guardianPhone: formData.get("guardianPhone") as string,
       status: formData.get("status") as "active" | "inactive" | "graduated",
       photo: photoInput?.value || "",
+    };
+
+    try {
+      await addStudent(studentData);
+      setIsAddOpen(false);
+    } catch (error) {
+      console.error("Failed to add student:", error);
+      alert("Failed to add student");
     }
-
-    // Add to persistent store (localStorage)
-    persistentStore.addStudent(studentData)
-
-    // Also sync to server for session persistence
-    await fetch("/api/students", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(studentData),
-    })
-
-    loadStudents()
-    setIsAddOpen(false)
   }
 
   async function handleEdit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    if (!editStudent) return
+    e.preventDefault();
+    if (!editStudent) return;
 
-    const formData = new FormData(e.currentTarget)
-    const photoInput = document.getElementById("edit-photo-value") as HTMLInputElement
+    const formData = new FormData(e.currentTarget);
+    const photoInput = document.getElementById(
+      "edit-photo-value",
+    ) as HTMLInputElement;
 
     const updateData = {
       name: formData.get("name") as string,
@@ -113,33 +127,27 @@ export default function StudentsPage() {
       guardianPhone: formData.get("guardianPhone") as string,
       status: formData.get("status") as "active" | "inactive" | "graduated",
       photo: photoInput?.value || editStudent.photo,
+    };
+
+    try {
+      await updateStudent(editStudent.id, updateData);
+      setIsEditOpen(false);
+      setEditStudent(null);
+    } catch (error) {
+      console.error("Failed to update student:", error);
+      alert("Failed to update student");
     }
-
-    // Update in persistent store
-    persistentStore.updateStudent(editStudent.id, updateData)
-
-    // Sync to server
-    await fetch(`/api/students/${editStudent.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updateData),
-    })
-
-    loadStudents()
-    setIsEditOpen(false)
-    setEditStudent(null)
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("Are you sure you want to delete this student?")) return
+    if (!confirm("Are you sure you want to delete this student?")) return;
 
-    // Delete from persistent store
-    persistentStore.deleteStudent(id)
-
-    // Sync to server
-    await fetch(`/api/students/${id}`, { method: "DELETE" })
-
-    loadStudents()
+    try {
+      await deleteStudent(id);
+    } catch (error) {
+      console.error("Failed to delete student:", error);
+      alert("Failed to delete student");
+    }
   }
 
   return (
@@ -147,10 +155,17 @@ export default function StudentsPage() {
       <div className="flex flex-col sm:flex-row justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Students</h1>
-          <p className="text-sm text-muted-foreground">Manage student records by department and semester</p>
+          <p className="text-sm text-muted-foreground">
+            Manage student records by department and semester
+          </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="icon" onClick={loadStudents} title="Refresh">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => mutate()}
+            title="Refresh"
+          >
             <RefreshCw className="h-4 w-4" />
           </Button>
           <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
@@ -173,8 +188,8 @@ export default function StudentsPage() {
       <Tabs
         value={selectedDept}
         onValueChange={(v) => {
-          setSelectedDept(v)
-          setSelectedSemester("all")
+          setSelectedDept(v);
+          setSelectedSemester("all");
         }}
       >
         <TabsList className="flex-wrap h-auto gap-1">
@@ -212,7 +227,9 @@ export default function StudentsPage() {
                 className="pl-9"
               />
             </div>
-            <p className="text-sm text-muted-foreground">{filteredStudents.length} students</p>
+            <p className="text-sm text-muted-foreground">
+              {filteredStudents.length} students
+            </p>
           </div>
         </CardHeader>
         <CardContent>
@@ -251,8 +268,12 @@ export default function StudentsPage() {
                           )}
                         </div>
                       </TableCell>
-                      <TableCell className="font-medium">{student.name}</TableCell>
-                      <TableCell className="font-mono text-sm">{student.rollNumber}</TableCell>
+                      <TableCell className="font-medium">
+                        {student.name}
+                      </TableCell>
+                      <TableCell className="font-mono text-sm">
+                        {student.rollNumber}
+                      </TableCell>
                       <TableCell className="max-w-[120px] truncate text-xs">
                         {student.department.split(" ")[0]}
                       </TableCell>
@@ -277,13 +298,17 @@ export default function StudentsPage() {
                             variant="ghost"
                             size="icon"
                             onClick={() => {
-                              setEditStudent(student)
-                              setIsEditOpen(true)
+                              setEditStudent(student);
+                              setIsEditOpen(true);
                             }}
                           >
                             <Pencil className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleDelete(student.id)}>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDelete(student.id)}
+                          >
                             <Trash2 className="h-4 w-4 text-red-500" />
                           </Button>
                         </div>
@@ -292,7 +317,10 @@ export default function StudentsPage() {
                   ))}
                   {filteredStudents.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                      <TableCell
+                        colSpan={8}
+                        className="text-center py-8 text-muted-foreground"
+                      >
                         No students found
                       </TableCell>
                     </TableRow>
@@ -309,11 +337,17 @@ export default function StudentsPage() {
           <DialogHeader>
             <DialogTitle>Edit Student</DialogTitle>
           </DialogHeader>
-          {editStudent && <StudentForm student={editStudent} onSubmit={handleEdit} idPrefix="edit" />}
+          {editStudent && (
+            <StudentForm
+              student={editStudent}
+              onSubmit={handleEdit}
+              idPrefix="edit"
+            />
+          )}
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }
 
 function StudentForm({
@@ -321,18 +355,22 @@ function StudentForm({
   onSubmit,
   idPrefix,
 }: {
-  student?: Student
-  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void
-  idPrefix: string
+  student?: Student;
+  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
+  idPrefix: string;
 }) {
-  const [photo, setPhoto] = useState(student?.photo || "")
+  const [photo, setPhoto] = useState(student?.photo || "");
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <div className="flex justify-center">
         <div className="text-center">
           <Label className="mb-2 block">Student Photo</Label>
-          <FileUpload value={photo} onChange={setPhoto} placeholder="Choose Photo" />
+          <FileUpload
+            value={photo}
+            onChange={setPhoto}
+            placeholder="Choose Photo"
+          />
           <input type="hidden" id={`${idPrefix}-photo-value`} value={photo} />
         </div>
       </div>
@@ -344,7 +382,13 @@ function StudentForm({
         </div>
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
-          <Input id="email" name="email" type="email" defaultValue={student?.email} required />
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            defaultValue={student?.email}
+            required
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="rollNumber">Roll Number</Label>
@@ -355,15 +399,25 @@ function StudentForm({
             required
             placeholder="34900123052"
           />
-          <p className="text-xs text-muted-foreground">Format: 349 + dept code + year + serial</p>
+          <p className="text-xs text-muted-foreground">
+            Format: 349 + dept code + year + serial
+          </p>
         </div>
         <div className="space-y-2">
           <Label htmlFor="phone">Phone</Label>
-          <Input id="phone" name="phone" defaultValue={student?.phone} required />
+          <Input
+            id="phone"
+            name="phone"
+            defaultValue={student?.phone}
+            required
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="department">Department</Label>
-          <Select name="department" defaultValue={student?.department || DEPARTMENTS[0]}>
+          <Select
+            name="department"
+            defaultValue={student?.department || DEPARTMENTS[0]}
+          >
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
@@ -378,7 +432,10 @@ function StudentForm({
         </div>
         <div className="space-y-2">
           <Label htmlFor="semester">Semester</Label>
-          <Select name="semester" defaultValue={student?.semester?.toString() || "1"}>
+          <Select
+            name="semester"
+            defaultValue={student?.semester?.toString() || "1"}
+          >
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
@@ -393,7 +450,13 @@ function StudentForm({
         </div>
         <div className="space-y-2">
           <Label htmlFor="dateOfBirth">Date of Birth</Label>
-          <Input id="dateOfBirth" name="dateOfBirth" type="date" defaultValue={student?.dateOfBirth} required />
+          <Input
+            id="dateOfBirth"
+            name="dateOfBirth"
+            type="date"
+            defaultValue={student?.dateOfBirth}
+            required
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="admissionYear">Admission Year</Label>
@@ -407,15 +470,30 @@ function StudentForm({
         </div>
         <div className="col-span-2 space-y-2">
           <Label htmlFor="address">Address</Label>
-          <Input id="address" name="address" defaultValue={student?.address} required />
+          <Input
+            id="address"
+            name="address"
+            defaultValue={student?.address}
+            required
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="guardianName">Guardian Name</Label>
-          <Input id="guardianName" name="guardianName" defaultValue={student?.guardianName} required />
+          <Input
+            id="guardianName"
+            name="guardianName"
+            defaultValue={student?.guardianName}
+            required
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="guardianPhone">Guardian Phone</Label>
-          <Input id="guardianPhone" name="guardianPhone" defaultValue={student?.guardianPhone} required />
+          <Input
+            id="guardianPhone"
+            name="guardianPhone"
+            defaultValue={student?.guardianPhone}
+            required
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="status">Status</Label>
@@ -435,5 +513,5 @@ function StudentForm({
         <Button type="submit">{student ? "Update" : "Add"} Student</Button>
       </div>
     </form>
-  )
+  );
 }
