@@ -61,8 +61,8 @@ export default function NoticesPage() {
         </Link>
 
         <div className="mb-12">
-          <h1 className="text-4xl font-bold mb-4">Notices & Announcements</h1>
-          <p className="text-muted-foreground max-w-2xl">
+          <h1 className="text-2xl sm:text-4xl font-bold mb-4">Notices & Announcements</h1>
+          <p className="text-sm sm:text-base text-muted-foreground max-w-2xl">
             Stay updated with the latest news, academic schedules, and events
             from CGEC. This board updates automatically when new notices are
             posted.

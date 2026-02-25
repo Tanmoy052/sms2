@@ -27,8 +27,9 @@ export function useStudents() {
     "students",
     studentsFetcher,
     {
-      revalidateOnFocus: true, // Enable revalidation on window focus
-      revalidateOnReconnect: true, // Enable revalidation on network reconnect
+      revalidateOnFocus: true,
+      revalidateOnReconnect: true,
+      refreshInterval: 5000,
       dedupingInterval: 2000,
     },
   );
@@ -80,6 +81,7 @@ export function useTeachers() {
     {
       revalidateOnFocus: true,
       revalidateOnReconnect: true,
+      refreshInterval: 5000,
       dedupingInterval: 2000,
     },
   );
@@ -131,6 +133,7 @@ export function useNotices() {
     {
       revalidateOnFocus: true,
       revalidateOnReconnect: true,
+      refreshInterval: 5000,
       dedupingInterval: 2000,
     },
   );
@@ -180,6 +183,7 @@ export function useProjects() {
     {
       revalidateOnFocus: true,
       revalidateOnReconnect: true,
+      refreshInterval: 5000,
       dedupingInterval: 2000,
     },
   );

@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Users, GraduationCap, Bell, FolderKanban } from "lucide-react"
 import { getDashboardStats } from "@/lib/stats-db"
+import { DashboardRefresh } from "@/components/admin/dashboard-refresh"
 
 export default async function AdminDashboard() {
   const stats = await getDashboardStats()
@@ -38,6 +39,7 @@ export default async function AdminDashboard() {
 
   return (
     <div className="space-y-6">
+      <DashboardRefresh />
       <div>
         <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
         <p className="text-sm text-muted-foreground">Welcome to CGEC Admin Panel</p>

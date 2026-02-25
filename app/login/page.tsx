@@ -291,7 +291,7 @@ function LoginContent() {
                 priority
               />
             </div>
-            <h1 className="text-2xl font-bold">
+            <h1 className="text-xl sm:text-2xl font-bold">
               CGEC Student Management System
             </h1>
             <p className="text-muted-foreground mt-2">

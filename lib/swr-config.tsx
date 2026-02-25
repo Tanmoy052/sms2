@@ -16,11 +16,12 @@ export function SWRProvider({ children }: { children: React.ReactNode }) {
     <SWRConfig
       value={{
         fetcher,
-        revalidateOnFocus: false,
+        revalidateOnFocus: true,
         revalidateOnReconnect: true,
         dedupingInterval: 2000,
-        errorRetryCount: 2,
+        errorRetryCount: 3,
         keepPreviousData: true,
+        refreshInterval: 10000, // Re-fetch every 10 seconds for cross-device sync
       }}
     >
       {children}

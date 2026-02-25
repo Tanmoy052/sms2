@@ -1,9 +1,10 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { Button } from '@/components/ui/button';
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Users,
   BookOpen,
@@ -17,19 +18,21 @@ import {
   MoreVertical,
   ChevronLeft,
   ChevronRight,
-} from 'lucide-react';
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { COLLEGE_INFO, STATISTICS, DEPARTMENTS } from '@/lib/config';
-import { cn } from '@/lib/utils';
+} from "@/components/ui/dropdown-menu";
+import { COLLEGE_INFO, STATISTICS, DEPARTMENTS } from "@/lib/config";
+import { cn } from "@/lib/utils";
 
 const COLLEGE_IMAGES = {
-  background: '/images/cgec-acdemic.jpeg',
-  logo: '/images/cgec-logo.png',
+  background: "/images/cgec-acdemic.jpeg",
+  slider2: "/images/slider-2.jpg",
+  slider3: "/images/slider-3.jpg",
+  logo: "/images/cgec-logo.png",
 };
 
 type HeroSlide = {
@@ -37,76 +40,140 @@ type HeroSlide = {
   image: string;
   title: string;
   description: string;
-  align?: 'center' | 'left';
+  align?: "center" | "left";
+  showText?: boolean;
 };
 
 const HERO_SLIDES: HeroSlide[] = [
   {
     id: 1,
     image: COLLEGE_IMAGES.background,
-    title: 'Student Management System',
+    title: "Student Management System",
     description:
-      'A comprehensive platform for managing student records, attendance, academic projects, and institutional notices. Empowering education through technology.',
-    align: 'center',
+      "A comprehensive platform for managing student records, attendance, academic projects, and institutional notices. Empowering education through technology.",
+    align: "center",
+  },
+  {
+    id: 2,
+    image: COLLEGE_IMAGES.slider2,
+    title: "Academic Excellence",
+    description:
+      "Foster a culture of learning and innovation with our comprehensive academic tools.",
+    align: "center",
+    showText: true,
+  },
+  {
+    id: 3,
+    image: COLLEGE_IMAGES.slider3,
+    title: "Project Showcase",
+    description:
+      "Explore innovative projects and research work from our talented students.",
+    align: "center",
+    showText: true,
   },
 ];
 
 const features = [
   {
     icon: Users,
-    title: 'Student Management',
+    title: "Student Management",
     description:
-      'Comprehensive student profiles with academic records and personal information.',
+      "    Comprehensive student profiles with academic records and personal information.",
   },
   {
     icon: Calendar,
-    title: 'Attendance Tracking',
+    title: "Attendance Tracking",
     description:
-      'Real-time attendance management with detailed reports and analytics.',
+      "Real-time attendance management with detailed reports and analytics.",
   },
   {
     icon: BookOpen,
-    title: 'Project Repository',
+    title: "Project Repository",
     description:
-      'Showcase student projects with descriptions, technologies, and live demos.',
+      "Showcase student projects with descriptions, technologies, and live demos.",
   },
   {
     icon: Award,
-    title: 'Academic Excellence',
+    title: "Academic Excellence",
     description:
-      'Track performance, grades, and achievements throughout the academic journey.',
+      "Track performance, grades, and achievements throughout the academic journey.",
   },
 ];
 
 export function LandingHero() {
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [page, setPage] = useState(0);
+  const [direction, setDirection] = useState(0);
 
+  // derived active index for UI (0-based into HERO_SLIDES)
+  const activeIndex =
+    ((page % HERO_SLIDES.length) + HERO_SLIDES.length) % HERO_SLIDES.length;
+  const currentSlide = HERO_SLIDES[activeIndex];
+
+  // advance forward
+  const paginate = (newDirection: number) => {
+    setPage(page + newDirection);
+    setDirection(newDirection);
+  };
+
+  const goToNext = () => paginate(1);
+  const goToPrev = () => paginate(-1);
+
+  // jump to an arbitrary slide (0-based into HERO_SLIDES)
+  const goToSlide = (index: number) => {
+    const diff = index - activeIndex;
+    if (diff !== 0) {
+      paginate(diff);
+    }
+  };
+
+  // auto-advance every 8 seconds
   useEffect(() => {
     const id = window.setInterval(() => {
-      setActiveIndex((prev) => (prev + 1) % HERO_SLIDES.length);
+      goToNext();
     }, 8000);
 
     return () => window.clearInterval(id);
-  }, []);
+  }, [page]);
 
-  const currentSlide = HERO_SLIDES[activeIndex];
-
-  const goToNext = () => {
-    setActiveIndex((prev) => (prev + 1) % HERO_SLIDES.length);
+  const slideVariants = {
+    enter: (direction: number) => ({
+      x: direction > 0 ? "100%" : "-100%",
+      opacity: 0,
+      scale: 1.1,
+    }),
+    center: {
+      zIndex: 1,
+      x: 0,
+      opacity: 1,
+      scale: 1,
+    },
+    exit: (direction: number) => ({
+      zIndex: 0,
+      x: direction < 0 ? "100%" : "-100%",
+      opacity: 0,
+      scale: 1,
+    }),
   };
 
-  const goToPrev = () => {
-    setActiveIndex((prev) => (prev === 0 ? HERO_SLIDES.length - 1 : prev - 1));
+  const swipeConfidenceThreshold = 10000;
+  const swipePower = (offset: number, velocity: number) => {
+    return Math.abs(offset) * velocity;
+  };
+
+  const textVariants = {
+    hidden: { opacity: 0, y: 50 },
+    visible: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -30 },
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-hidden">
       {/* Header */}
       <header className="bg-white/90 backdrop-blur-sm sticky top-0 z-50 shadow-sm">
         <div className="container mx-auto px-4 h-12 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Image
-              src={COLLEGE_IMAGES.logo || '/placeholder.svg'}
+              src={COLLEGE_IMAGES.logo || "/placeholder.svg"}
               alt="CGEC Logo"
               width={36}
               height={36}
@@ -146,7 +213,11 @@ export function LandingHero() {
             <div className="md:hidden">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    id="dropdown-menu-trigger"
+                  >
                     <MoreVertical className="h-5 w-5" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -185,136 +256,152 @@ export function LandingHero() {
       </header>
 
       {/* Hero Section */}
-      <section className="relative min-h-[560px] md:min-h-[600px] flex items-end justify-center overflow-hidden">
-        <div className="absolute inset-0" style={{ perspective: '1000px' }}>
-          <div
-            className="relative w-full h-full transition-transform duration-700 transform-gpu"
-            style={{ transform: `rotateY(${activeIndex * 180}deg)` }}
-          >
-            {HERO_SLIDES.map((slide, index) => (
-              <div
-                key={slide.id}
-                className="absolute inset-0 backface-hidden"
-                style={{ transform: `rotateY(${index * 180}deg)` }}
-              >
-                <Image
-                  src={slide.image || '/placeholder.svg'}
-                  alt="slide image"
-                  fill
-                  className="object-cover brightness-110 saturate-99"
-                  priority={index === 0}
-                  sizes="100vw"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/22 to-transparent" />
-              </div>
-            ))}
-          </div>
-        </div>
+      <section className="relative h-[calc(100vh-3rem)] min-h-[500px] flex items-center justify-center overflow-hidden bg-slate-900/5 py-0">
+        <div className="absolute inset-0 bg-slate-900/5 -z-10" />
 
-        <div className="absolute top-4 left-0 right-0 z-10 flex justify-center">
-          <div className="inline-flex items-center gap-3 px-4 py-2 bg-white/95 backdrop-blur-sm rounded-full shadow-lg">
-            <Image
-              src={COLLEGE_IMAGES.logo || '/placeholder.svg'}
-              alt="CGEC Logo"
-              width={40}
-              height={40}
-              className="rounded-full"
-              priority
-            />
-            <span className="font-bold text-base md:text-lg text-primary">
-              Coochbehar Government Engineering College
-            </span>
-          </div>
-        </div>
+        {/* 3D Carousel Container */}
+        <div className="relative w-full h-full">
+          <AnimatePresence initial={false} custom={direction}>
+            <motion.div
+              key={page}
+              custom={direction}
+              variants={slideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{
+                x: { type: "spring", stiffness: 600, damping: 40, mass: 0.8 },
+                opacity: { duration: 0.3 },
+                scale: { duration: 0.4 },
+              }}
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={1}
+              onDragEnd={(e, { offset, velocity }) => {
+                const swipe = swipePower(offset.x, velocity.x);
 
-        {/* Slide controls */}
-        <button
-          type="button"
-          aria-label="Previous slide"
-          className="absolute left-3 md:left-6 top-1/2 z-20 -translate-y-1/2 rounded-full bg-white/80 hover:bg-white shadow-md p-2 text-slate-700"
-          onClick={goToPrev}
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-        <button
-          type="button"
-          aria-label="Next slide"
-          className="absolute right-3 md:right-6 top-1/2 z-20 -translate-y-1/2 rounded-full bg-white/80 hover:bg-white shadow-md p-2 text-slate-700"
-          onClick={goToNext}
-        >
-          <ChevronRight className="h-5 w-5" />
-        </button>
-
-        <div className="relative z-10 container mx-auto px-4 py-10">
-          <div
-            className={cn(
-              'max-w-3xl space-y-4',
-              currentSlide.align === 'center'
-                ? 'mx-auto text-center'
-                : 'ml-0 mr-auto text-left'
-            )}
-          >
-            {currentSlide.showText !== false && (
-              <>
-                <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-balance text-white [text-shadow:_2px_2px_8px_rgba(0,0,0,0.8),_0_0_20px_rgba(0,0,0,0.5)]">
-                  {currentSlide.title}
-                </h1>
-                <p className="text-base md:text-lg text-white font-medium max-w-2xl text-pretty [text-shadow:_1px_1px_6px_rgba(0,0,0,0.8),_0_0_15px_rgba(0,0,0,0.4)]">
-                  {currentSlide.description}
-                </p>
-              </>
-            )}
-            <div
-              className={cn(
-                'flex gap-3 pt-3',
-                currentSlide.align === 'center'
-                  ? 'justify-center'
-                  : 'justify-start'
-              )}
+                if (swipe < -swipeConfidenceThreshold) {
+                  paginate(1);
+                } else if (swipe > swipeConfidenceThreshold) {
+                  paginate(-1);
+                }
+              }}
+              className="absolute w-full h-full shadow-2xl overflow-hidden cursor-pointer bg-black"
             >
-              {activeIndex === 0 ? (
-                <>
-                  <Link href="/login">
-                    <Button size="default" className="gap-2 shadow-xl">
-                      Access Portal
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  </Link>
-                  <Link href="/projects">
-                    <Button
-                      size="default"
-                      variant="outline"
-                      className="shadow-xl bg-white hover:bg-white/90 text-primary border-white"
-                    >
-                      View Projects
-                    </Button>
-                  </Link>
-                </>
-              ) : (
-                <Link
-                  href="https://cgec.org.in/"
-                  target="_blank"
-                  rel="noopener noreferrer"
+              <div className="relative w-full h-full">
+                <motion.div
+                  className="relative w-full h-full"
+                  initial={{ scale: 1.1 }}
+                  animate={{ scale: 1 }}
+                  transition={{ duration: 10, ease: "linear" }}
                 >
-                  <Button size="default" className="gap-2 shadow-xl">
-                    Know More
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </Link>
-              )}
-            </div>
-          </div>
+                  <Image
+                    src={currentSlide.image || "/placeholder.svg"}
+                    alt={currentSlide.title}
+                    fill
+                    className="object-cover"
+                    priority
+                  />
+                </motion.div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/0 via-transparent to-transparent" />
 
-          <div className="mt-6 flex justify-center gap-2">
-            {HERO_SLIDES.map((slide, index) => (
+                {/* Text Content */}
+                <div className="absolute bottom-0 left-0 right-0 p-6 md:p-12 text-left z-20">
+                  <motion.div
+                    variants={textVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                    transition={{ duration: 0.5, delay: 0.2 }}
+                  >
+                    {currentSlide.title && (
+                      <motion.h2
+                        className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-4 drop-shadow-lg tracking-tight"
+                        variants={textVariants}
+                        transition={{ duration: 0.5, delay: 0.3 }}
+                      >
+                        {currentSlide.title}
+                      </motion.h2>
+                    )}
+                    {currentSlide.description && (
+                      <motion.p
+                        className="text-white/90 text-base md:text-xl max-w-2xl drop-shadow-md line-clamp-3 md:line-clamp-none font-medium leading-relaxed"
+                        variants={textVariants}
+                        transition={{ duration: 0.5, delay: 0.4 }}
+                      >
+                        {currentSlide.description}
+                      </motion.p>
+                    )}
+
+                    <motion.div
+                      className="mt-6 md:mt-8 flex flex-wrap gap-3 md:gap-4"
+                      variants={textVariants}
+                      transition={{ duration: 0.5, delay: 0.5 }}
+                    >
+                      {activeIndex === 0 ? (
+                        <>
+                          <Link href="/login">
+                            <Button
+                              size="lg"
+                              className="gap-2 text-sm md:text-base px-6 md:px-8 h-10 md:h-12 shadow-xl bg-primary hover:bg-primary/90 transition-all hover:scale-105 active:scale-95 w-full sm:w-auto"
+                            >
+                              Access Portal{" "}
+                              <ArrowRight className="h-4 w-4 md:h-5 md:w-5" />
+                            </Button>
+                          </Link>
+                          <Link href="/projects">
+                            <Button
+                              size="lg"
+                              variant="outline"
+                              className="text-sm md:text-base px-6 md:px-8 h-10 md:h-12 shadow-xl bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white backdrop-blur-sm transition-all hover:scale-105 active:scale-95 w-full sm:w-auto"
+                            >
+                              View Projects
+                            </Button>
+                          </Link>
+                        </>
+                      ) : (
+                        <Link href="/projects">
+                          <Button
+                            size="lg"
+                            className="gap-2 text-sm md:text-base px-6 md:px-8 h-10 md:h-12 shadow-xl transition-all hover:scale-105 active:scale-95 w-full sm:w-auto"
+                          >
+                            Learn More{" "}
+                            <ArrowRight className="h-4 w-4 md:h-5 md:w-5" />
+                          </Button>
+                        </Link>
+                      )}
+                    </motion.div>
+                  </motion.div>
+                </div>
+              </div>
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Controls */}
+          <button
+            onClick={goToPrev}
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-30 p-2 rounded-full bg-white/20 hover:bg-white/40 shadow-lg text-white transition-all backdrop-blur-sm"
+          >
+            <ChevronLeft className="h-8 w-8" />
+          </button>
+          <button
+            onClick={goToNext}
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-30 p-2 rounded-full bg-white/20 hover:bg-white/40 shadow-lg text-white transition-all backdrop-blur-sm"
+          >
+            <ChevronRight className="h-8 w-8" />
+          </button>
+
+          {/* Dots */}
+          <div className="absolute bottom-8 left-0 right-0 flex justify-center gap-2 z-30">
+            {HERO_SLIDES.map((_, index) => (
               <button
-                key={slide.id}
-                type="button"
-                aria-label={`Go to slide ${index + 1}`}
-                onClick={() => setActiveIndex(index)}
+                key={index}
+                onClick={() => goToSlide(index)}
                 className={cn(
-                  'h-1.5 w-4 rounded-full bg-white/40 transition-all',
-                  index === activeIndex && 'w-6 bg-white'
+                  "h-2 rounded-full transition-all duration-300 shadow-lg",
+                  index === activeIndex
+                    ? "w-8 bg-white"
+                    : "w-2 bg-white/40 hover:bg-white/60",
                 )}
               />
             ))}
@@ -451,7 +538,7 @@ export function LandingHero() {
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <Image
-                  src={COLLEGE_IMAGES.logo || '/placeholder.svg'}
+                  src={COLLEGE_IMAGES.logo || "/placeholder.svg"}
                   alt="CGEC Logo"
                   width={48}
                   height={48}

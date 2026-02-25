@@ -196,12 +196,16 @@ export default function TeacherDashboard() {
 
       <main className="container mx-auto px-4 py-6">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold">Welcome, {teacher.name}</h1>
-          <p className="text-muted-foreground">{teacher.department}</p>
+          <h1 className="text-xl sm:text-2xl font-bold">
+            Welcome, {teacher.name}
+          </h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
+            {teacher.department}
+          </p>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="mb-6">
+          <TabsList className="mb-6 h-auto flex-wrap justify-start gap-2">
             <TabsTrigger value="profile" className="gap-2">
               <User className="h-4 w-4" />
               Profile
@@ -655,24 +659,26 @@ function AttendanceTab({
                 </div>
               </div>
 
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => markAll("present")}
-                  className="gap-1"
-                >
-                  <CheckCircle className="h-4 w-4" /> Present All
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => markAll("absent")}
-                  className="gap-1"
-                >
-                  <XCircle className="h-4 w-4" /> Absent All
-                </Button>
-                <span className="text-xs text-muted-foreground ml-auto">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => markAll("present")}
+                    className="gap-1"
+                  >
+                    <CheckCircle className="h-4 w-4" /> Present All
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => markAll("absent")}
+                    className="gap-1"
+                  >
+                    <XCircle className="h-4 w-4" /> Absent All
+                  </Button>
+                </div>
+                <span className="text-xs text-muted-foreground">
                   {Object.values(attendanceData).some((v) => v === null)
                     ? "Not all students marked"
                     : ""}
@@ -683,13 +689,13 @@ function AttendanceTab({
                 {filteredStudents.map((student, index) => (
                   <div
                     key={student.id}
-                    className="flex items-center justify-between p-3 hover:bg-muted/50"
+                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 hover:bg-muted/50 gap-3"
                   >
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm text-muted-foreground w-8">
+                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                      <span className="text-sm text-muted-foreground w-6 flex-shrink-0">
                         {index + 1}.
                       </span>
-                      <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center overflow-hidden">
+                      <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center overflow-hidden flex-shrink-0">
                         {student.photo ? (
                           <Image
                             src={student.photo || "/placeholder.svg"}
@@ -702,9 +708,11 @@ function AttendanceTab({
                           <User className="h-4 w-4 text-green-600" />
                         )}
                       </div>
-                      <div>
-                        <p className="font-medium text-sm">{student.name}</p>
-                        <p className="text-xs text-muted-foreground">
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm truncate max-w-[150px] sm:max-w-none">
+                          {student.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate">
                           <span className="font-mono">
                             {student.rollNumber}
                           </span>
@@ -712,7 +720,7 @@ function AttendanceTab({
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 w-full sm:w-auto justify-end sm:justify-start overflow-x-auto">
                       <Button
                         variant={
                           attendanceData[student.id] === "present"
@@ -720,7 +728,7 @@ function AttendanceTab({
                             : "outline"
                         }
                         size="sm"
-                        className="gap-1"
+                        className="gap-1 flex-shrink-0"
                         onClick={() =>
                           setAttendanceData((prev) => ({
                             ...prev,
@@ -737,7 +745,7 @@ function AttendanceTab({
                             : "outline"
                         }
                         size="sm"
-                        className="gap-1"
+                        className="gap-1 flex-shrink-0"
                         onClick={() =>
                           setAttendanceData((prev) => ({
                             ...prev,
@@ -747,7 +755,7 @@ function AttendanceTab({
                       >
                         <XCircle className="h-4 w-4" /> Absent
                       </Button>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-xs text-muted-foreground whitespace-nowrap min-w-[45px] text-right">
                         {attendanceData[student.id] === null
                           ? "Not set"
                           : attendanceData[student.id]}
@@ -931,7 +939,10 @@ function AttendanceTab({
                 {Object.entries(groupedAttendance)
                   .sort(([a], [b]) => b.localeCompare(a))
                   .map(([date, subjects]) => (
-                    <div key={date} className="border border-border/40 rounded-lg p-4">
+                    <div
+                      key={date}
+                      className="border border-border/40 rounded-lg p-4"
+                    >
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
                           <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -951,15 +962,15 @@ function AttendanceTab({
                           return (
                             <div
                               key={subj}
-                              className="flex items-center justify-between p-2 bg-muted/50 rounded-lg"
+                              className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-muted/50 rounded-lg gap-2"
                             >
                               <div className="flex items-center gap-2">
-                                <BookOpen className="h-4 w-4 text-blue-600" />
-                                <span className="text-sm font-medium">
+                                <BookOpen className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                                <span className="text-sm font-medium break-words">
                                   {subj}
                                 </span>
                               </div>
-                              <div className="flex items-center gap-3">
+                              <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end sm:justify-start">
                                 <Badge
                                   variant="outline"
                                   className="text-green-600 border-green-200"
@@ -978,7 +989,7 @@ function AttendanceTab({
                                   onClick={() =>
                                     handleDownloadDateReport(date, subj)
                                   }
-                                  className="gap-1"
+                                  className="gap-1 ml-auto sm:ml-0"
                                 >
                                   <FileText className="h-4 w-4" />
                                   PDF
@@ -1178,9 +1189,9 @@ function ProjectsTab({
         {projects.map((project) => (
           <Card key={project.id}>
             <CardHeader className="pb-2">
-              <div className="flex items-start justify-between">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                 <CardTitle className="text-base">{project.title}</CardTitle>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 w-full sm:w-auto justify-end sm:justify-start">
                   <Badge
                     variant={
                       project.status === "completed" ? "default" : "secondary"
@@ -1472,9 +1483,9 @@ function NoticesTab({
         {notices.map((notice) => (
           <Card key={notice.id}>
             <CardHeader className="pb-2">
-              <div className="flex items-start justify-between">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                 <CardTitle className="text-base">{notice.title}</CardTitle>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 w-full sm:w-auto justify-end sm:justify-start">
                   <Badge variant="outline">{notice.category}</Badge>
                   <Button
                     variant="ghost"

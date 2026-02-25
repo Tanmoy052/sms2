@@ -423,7 +423,7 @@ function TeacherForm({
             <SelectContent>
               {DEPARTMENTS.map((dept) => (
                 <SelectItem key={dept} value={dept}>
-                  {dept}
+                  {DEPT_SHORT_CODES[dept] || dept}
                 </SelectItem>
               ))}
             </SelectContent>

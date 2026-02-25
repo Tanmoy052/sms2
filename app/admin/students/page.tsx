@@ -35,7 +35,7 @@ import { Plus, Pencil, Trash2, Search, User, RefreshCw } from "lucide-react";
 import { FileUpload } from "@/components/ui/file-upload";
 import { useStudents } from "@/hooks/use-api";
 import type { Student } from "@/lib/types";
-import { DEPARTMENTS } from "@/lib/types";
+import { DEPARTMENTS, DEPT_SHORT_CODES } from "@/lib/types";
 
 export default function StudentsPage() {
   const {
@@ -424,7 +424,7 @@ function StudentForm({
             <SelectContent>
               {DEPARTMENTS.map((dept) => (
                 <SelectItem key={dept} value={dept}>
-                  {dept}
+                  {DEPT_SHORT_CODES[dept] || dept}
                 </SelectItem>
               ))}
             </SelectContent>

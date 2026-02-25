@@ -39,6 +39,7 @@ import {
   Clock,
 } from "lucide-react";
 import type { Attendance, Student } from "@/lib/types";
+import { DEPT_SHORT_CODES } from "@/lib/types";
 import { useAttendance, useStudents } from "@/hooks/use-api";
 import { formatDate } from "@/lib/utils";
 
@@ -222,7 +223,7 @@ export default function AttendancePage() {
                   <SelectItem value="all">All Departments</SelectItem>
                   {availableDepartments.map((dept) => (
                     <SelectItem key={dept} value={dept}>
-                      {dept}
+                      {DEPT_SHORT_CODES[dept] || dept}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -268,70 +269,74 @@ export default function AttendancePage() {
           {isLoading ? (
             <p className="text-center py-8 text-muted-foreground">Loading...</p>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Student</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Subject</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredAttendance?.map((record) => (
-                  <TableRow key={record.id}>
-                    <TableCell className="font-medium">
-                      {getStudentName(record.studentId)}
-                    </TableCell>
-                    <TableCell>{formatDate(record.date)}</TableCell>
-                    <TableCell>{record.subject}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          record.status === "present"
-                            ? "default"
-                            : record.status === "late"
-                              ? "outline"
-                              : "destructive"
-                        }
-                      >
-                        {record.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          setEditRecord(record);
-                          setIsEditOpen(true);
-                        }}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(record.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {filteredAttendance?.length === 0 && (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell
-                      colSpan={5}
-                      className="text-center py-8 text-muted-foreground"
-                    >
-                      No attendance records found
-                    </TableCell>
+                    <TableHead>Student</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Subject</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredAttendance?.map((record) => (
+                    <TableRow key={record.id}>
+                      <TableCell className="font-medium">
+                        {getStudentName(record.studentId)}
+                      </TableCell>
+                      <TableCell>{formatDate(record.date)}</TableCell>
+                      <TableCell>{record.subject}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            record.status === "present"
+                              ? "default"
+                              : record.status === "late"
+                                ? "outline"
+                                : "destructive"
+                          }
+                        >
+                          {record.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              setEditRecord(record);
+                              setIsEditOpen(true);
+                            }}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDelete(record.id)}
+                          >
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {filteredAttendance?.length === 0 && (
+                    <TableRow>
+                      <TableCell
+                        colSpan={5}
+                        className="text-center py-8 text-muted-foreground"
+                      >
+                        No attendance records found
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>

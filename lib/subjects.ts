@@ -1,4 +1,3 @@
-
 export const SUBJECTS_BY_DEPARTMENT: Record<string, string[]> = {
   "Computer Science & Engineering": [
     "Data Structures & Algorithms",
@@ -98,7 +97,5 @@ export const SUBJECTS_BY_DEPARTMENT: Record<string, string[]> = {
     "Professional Communication",
     "Environmental Science",
     "Economics for Engineers",
-    "Values & Ethics in Profession",
-    "Biology for Engineers",
   ],
 };

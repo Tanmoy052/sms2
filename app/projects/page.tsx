@@ -53,8 +53,8 @@ export default function ProjectsPage() {
         </Link>
 
         <div className="mb-12">
-          <h1 className="text-4xl font-bold mb-4">Student Projects</h1>
-          <p className="text-muted-foreground max-w-2xl">
+          <h1 className="text-2xl sm:text-4xl font-bold mb-4">Student Projects</h1>
+          <p className="text-sm sm:text-base text-muted-foreground max-w-2xl">
             Explore innovative projects developed across CGEC departments. This
             list updates automatically when anyone adds, edits, or deletes a
             project in the portal.

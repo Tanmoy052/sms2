@@ -240,8 +240,10 @@ export default function StudentDashboard() {
 
       <main className="container mx-auto px-4 py-6">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold">Welcome, {student.name}</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-xl sm:text-2xl font-bold">
+            Welcome, {student.name}
+          </h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
             Roll No:{" "}
             <span className="font-mono font-semibold">
               {student.rollNumber}
@@ -251,7 +253,7 @@ export default function StudentDashboard() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="mb-6">
+          <TabsList className="mb-6 h-auto flex-wrap justify-start gap-2">
             <TabsTrigger value="profile" className="gap-2">
               <User className="h-4 w-4" />
               Profile
@@ -390,7 +392,7 @@ export default function StudentDashboard() {
                     {deptProjects.map((project) => (
                       <Card key={project.id}>
                         <CardHeader className="pb-2">
-                          <div className="flex items-start justify-between">
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                             <CardTitle className="text-base">
                               {project.title}
                             </CardTitle>
@@ -400,6 +402,7 @@ export default function StudentDashboard() {
                                   ? "default"
                                   : "secondary"
                               }
+                              className="w-auto sm:w-auto"
                             >
                               {project.status}
                             </Badge>
@@ -547,12 +550,12 @@ export default function StudentDashboard() {
                   activeNotices.map((notice) => (
                     <Card key={notice.id}>
                       <CardHeader className="pb-2">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex items-center gap-2">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <h3 className="font-medium">{notice.title}</h3>
                             <Badge variant="outline">{notice.category}</Badge>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 w-full sm:w-auto justify-end sm:justify-start">
                             <Button
                               variant="ghost"
                               size="icon"

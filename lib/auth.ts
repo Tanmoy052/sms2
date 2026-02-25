@@ -1,28 +1,30 @@
-import { cookies } from "next/headers";
-import { ADMIN_CREDENTIALS } from "./constants";
-import { parseStudentRollNumber, DEPT_SHORT_CODES } from "./types";
-import type { UserRole } from "./types";
+import { cookies } from 'next/headers';
+import { ADMIN_CREDENTIALS } from './constants';
+import { parseStudentRollNumber, DEPT_SHORT_CODES } from './types';
+import type { UserRole } from './types';
 import {
   getTeacherCredentials,
   getTeachersFromDB,
   addTeacherCredential,
   getTeacherById,
   verifyTeacherCredentials,
-} from "./teacher-db";
+} from './teacher-db';
 import {
   getStudentByRollNumber,
   addStudentToDB,
   updateStudentInDB,
   getStudentById,
-} from "./student-db";
+  // exported type for new student payload
+  NewStudent,
+} from './student-db';
 
-const SESSION_COOKIE = "cgec_session";
-const ROLE_COOKIE = "cgec_role";
+const SESSION_COOKIE = 'cgec_session';
+const ROLE_COOKIE = 'cgec_role';
 
 // Admin authentication
 export async function verifyAdmin(username: string, password: string) {
   const admin = ADMIN_CREDENTIALS.find(
-    (a) => a.username === username && a.password === password,
+    (a) => a.username === username && a.password === password
   );
   return admin || null;
 }
@@ -36,25 +38,25 @@ export async function verifyTeacher(username: string, password: string) {
     const credentials = await getTeacherCredentials();
     const teachers = await getTeachersFromDB();
     const teachersWithoutCreds = teachers.filter(
-      (t) => !credentials.some((c) => c.teacherId === t.id),
+      (t) => !credentials.some((c) => c.teacherId === t.id)
     );
 
     for (const teacher of teachersWithoutCreds) {
       const cleanName = teacher.name
         .toLowerCase()
-        .replace(/^(dr\.|prof\.|mr\.|mrs\.|ms\.)\s*/i, "")
+        .replace(/^(dr\.|prof\.|mr\.|mrs\.|ms\.)\s*/i, '')
         .trim();
       const nameParts = cleanName.split(/\s+/).filter(Boolean);
-      const firstName = nameParts[0]?.toLowerCase() || "teacher";
+      const firstName = nameParts[0]?.toLowerCase() || 'teacher';
       const lastName =
         nameParts.length > 1
           ? nameParts[nameParts.length - 1].toLowerCase()
-          : "";
+          : '';
       const baseUsername = lastName ? `${firstName}_${lastName}` : firstName;
 
       let deptShort = DEPT_SHORT_CODES[teacher.department];
       if (!deptShort) {
-        deptShort = teacher.department.split(" ")[0];
+        deptShort = teacher.department.split(' ')[0];
       }
       deptShort = deptShort.toLowerCase();
 
@@ -102,14 +104,17 @@ export async function verifyStudent(rollNumber: string, password: string) {
       rollNumber,
       department: parsed.department,
       semester: parsed.currentSemester,
-      phone: "",
-      address: "",
-      dateOfBirth: "",
+      phone: '',
+      address: '',
+      dateOfBirth: '',
       admissionYear: parsed.admissionYear,
-      guardianName: "",
-      guardianPhone: "",
-      status: "active",
-    });
+      guardianName: '',
+      guardianPhone: '',
+      status: 'active',
+      // satisfy older type systems that expect timestamps
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    } as NewStudent);
   } else {
     // Update semester based on current calculation
     await updateStudentInDB(student.id, {
@@ -137,16 +142,16 @@ export async function createSession(userId: string, role: UserRole) {
   // Set session cookie
   cookieStore.set(SESSION_COOKIE, userId, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: process.env.NODE_ENV === 'production',
     maxAge: 60 * 60 * 24 * 7, // 1 week
-    path: "/",
+    path: '/',
   });
 
   // Set role cookie (readable by client)
   cookieStore.set(ROLE_COOKIE, role, {
-    secure: process.env.NODE_ENV === "production",
+    secure: process.env.NODE_ENV === 'production',
     maxAge: 60 * 60 * 24 * 7, // 1 week
-    path: "/",
+    path: '/',
   });
 }
 
@@ -161,11 +166,11 @@ export async function getSession() {
   const userRole = role.value as UserRole;
   let user = null;
 
-  if (userRole === "admin") {
+  if (userRole === 'admin') {
     user = ADMIN_CREDENTIALS.find((a) => a.id === userId);
-  } else if (userRole === "teacher") {
+  } else if (userRole === 'teacher') {
     user = await getTeacherById(userId);
-  } else if (userRole === "student") {
+  } else if (userRole === 'student') {
     user = await getStudentById(userId);
   }
 

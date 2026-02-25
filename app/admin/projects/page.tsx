@@ -34,7 +34,7 @@ import {
   Eye,
 } from "lucide-react";
 import type { Project } from "@/lib/types";
-import { DEPARTMENTS } from "@/lib/types";
+import { DEPARTMENTS, DEPT_SHORT_CODES } from "@/lib/types";
 
 export default function ProjectsPage() {
   const {
@@ -428,7 +428,7 @@ function ProjectForm({
             <SelectContent>
               {DEPARTMENTS.map((dept) => (
                 <SelectItem key={dept} value={dept}>
-                  {dept}
+                  {DEPT_SHORT_CODES[dept] || dept}
                 </SelectItem>
               ))}
             </SelectContent>
