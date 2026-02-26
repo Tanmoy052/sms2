@@ -190,7 +190,7 @@ export function LandingHero() {
           <div className="flex items-center gap-4 md:gap-6">
             <nav className="hidden md:flex items-center gap-6">
               <Link
-                href="https://cgec.org.in/"
+                href="https://cgec-website-frontend.vercel.app/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-sm font-semibold text-gray-700 hover:text-blue-700 transition-colors"
@@ -224,7 +224,7 @@ export function LandingHero() {
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem asChild>
                     <Link
-                      href="https://cgec.org.in/"
+                      href="https://cgec-website-frontend.vercel.app/"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="cursor-pointer"
