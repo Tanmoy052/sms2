@@ -264,7 +264,11 @@ function LoginContent() {
   }, []);
 
   const navigateToPortal = useCallback((type: string) => {
-    window.location.href = `/login?type=${type}`;
+    if (type === "admin") {
+      window.location.href = "/admin-login";
+    } else {
+      window.location.href = `/login?type=${type}`;
+    }
   }, []);
 
   // Portal selection view
