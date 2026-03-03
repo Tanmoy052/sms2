@@ -1,10 +1,13 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Users, GraduationCap, Bell, FolderKanban } from "lucide-react"
-import { getDashboardStats } from "@/lib/stats-db"
-import { DashboardRefresh } from "@/components/admin/dashboard-refresh"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Users, GraduationCap, Bell, FolderKanban } from "lucide-react";
+import { getDashboardStats } from "@/lib/stats-db";
+import { DashboardRefresh } from "@/components/admin/dashboard-refresh";
+import { UpdateAdminCredentials } from "@/components/admin/update-credentials";
+import { getAdminCredentials } from "@/lib/admin-db";
 
 export default async function AdminDashboard() {
-  const stats = await getDashboardStats()
+  const stats = await getDashboardStats();
+  const currentAdmin = await getAdminCredentials();
 
   const statCards = [
     {
@@ -35,21 +38,25 @@ export default async function AdminDashboard() {
       icon: FolderKanban,
       color: "text-purple-600 bg-purple-100",
     },
-  ]
+  ];
 
   return (
     <div className="space-y-6">
       <DashboardRefresh />
       <div>
         <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-        <p className="text-sm text-muted-foreground">Welcome to CGEC Admin Panel</p>
+        <p className="text-sm text-muted-foreground">
+          Welcome to CGEC Admin Panel
+        </p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {statCards.map((stat) => (
           <Card key={stat.title}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">{stat.title}</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                {stat.title}
+              </CardTitle>
               <div className={`p-2 rounded-lg ${stat.color}`}>
                 <stat.icon className="h-4 w-4" />
               </div>
@@ -69,7 +76,8 @@ export default async function AdminDashboard() {
           </CardHeader>
           <CardContent className="space-y-2">
             <p className="text-sm text-muted-foreground">
-              Use the sidebar to navigate to different sections and manage records.
+              Use the sidebar to navigate to different sections and manage
+              records.
             </p>
             <ul className="text-sm space-y-1 text-muted-foreground">
               <li>• Add, edit, or delete student records</li>
@@ -86,7 +94,8 @@ export default async function AdminDashboard() {
           </CardHeader>
           <CardContent className="space-y-2 text-sm text-muted-foreground">
             <p>
-              <strong>College:</strong> Coochbehar Government Engineering College
+              <strong>College:</strong> Coochbehar Government Engineering
+              College
             </p>
             <p>
               <strong>System:</strong> Student Management Portal
@@ -97,6 +106,10 @@ export default async function AdminDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      <div id="update-credentials">
+        <UpdateAdminCredentials currentAdmin={currentAdmin} />
+      </div>
     </div>
-  )
+  );
 }

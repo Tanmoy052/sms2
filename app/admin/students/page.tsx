@@ -31,7 +31,35 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Pencil, Trash2, Search, User, RefreshCw } from "lucide-react";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Search,
+  User,
+  RefreshCw,
+  Eye,
+  EyeOff,
+} from "lucide-react";
+
+function PasswordCell({ password }: { password?: string }) {
+  const [show, setShow] = useState(false);
+  if (!password) return <span className="text-muted-foreground">-</span>;
+
+  return (
+    <div className="flex items-center gap-2">
+      <span className="font-mono text-xs">{show ? password : "••••••••"}</span>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-6 w-6"
+        onClick={() => setShow(!show)}
+      >
+        {show ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+      </Button>
+    </div>
+  );
+}
 import { FileUpload } from "@/components/ui/file-upload";
 import { useStudents } from "@/hooks/use-api";
 import type { Student } from "@/lib/types";
@@ -243,6 +271,7 @@ export default function StudentsPage() {
                     <TableHead>Photo</TableHead>
                     <TableHead>Name</TableHead>
                     <TableHead>Roll Number</TableHead>
+                    <TableHead>Password</TableHead>
                     <TableHead>Department</TableHead>
                     <TableHead>Semester</TableHead>
                     <TableHead>Year</TableHead>
@@ -273,6 +302,9 @@ export default function StudentsPage() {
                       </TableCell>
                       <TableCell className="font-mono text-sm">
                         {student.rollNumber}
+                      </TableCell>
+                      <TableCell>
+                        <PasswordCell password={(student as any).password} />
                       </TableCell>
                       <TableCell className="max-w-[120px] truncate text-xs">
                         {student.department.split(" ")[0]}

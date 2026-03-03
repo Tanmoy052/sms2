@@ -44,8 +44,6 @@ const portalTypes = {
     description: "Access administrative controls and manage all records",
     icon: Shield,
     color: "bg-red-500",
-    demoUsername: "admin",
-    demoPassword: "admin123",
     usernameLabel: "Username",
     usernamePlaceholder: "Enter admin username",
   },
@@ -54,8 +52,6 @@ const portalTypes = {
     description: "Manage attendance, projects, notices for your department",
     icon: Users,
     color: "bg-blue-500",
-    demoUsername: "tanmoy_pal",
-    demoPassword: "tanmoy@cse",
     usernameLabel: "Username",
     usernamePlaceholder: "Enter teacher username",
   },
@@ -64,8 +60,6 @@ const portalTypes = {
     description: "Access your academic records, attendance and notices",
     icon: GraduationCap,
     color: "bg-green-500",
-    demoUsername: "34900122001",
-    demoPassword: "any",
     usernameLabel: "Roll Number",
     usernamePlaceholder: "Enter 11-digit roll number",
   },
@@ -98,16 +92,6 @@ const PortalCard = memo(function PortalCard({
         <p className="text-sm text-muted-foreground text-center">
           {portal.description}
         </p>
-        <div className="mt-3 p-2 bg-muted rounded text-xs text-center">
-          <p className="font-medium">Demo:</p>
-          <p>
-            {portal.usernameLabel}:{" "}
-            <span className="font-mono">{portal.demoUsername}</span>
-          </p>
-          <p>
-            Password: <span className="font-mono">{portal.demoPassword}</span>
-          </p>
-        </div>
       </CardContent>
     </Card>
   );
@@ -228,17 +212,6 @@ function LoginContent() {
       }
     },
     [portalType, username, password],
-  );
-
-  const fillDemoCredentials = useCallback(
-    (demoUser?: string, demoPass?: string) => {
-      if (portalType) {
-        const portal = portalTypes[portalType];
-        setUsername(demoUser || portal.demoUsername);
-        setPassword(demoPass || portal.demoPassword);
-      }
-    },
-    [portalType],
   );
 
   const goBackToPortal = useCallback(() => {
@@ -510,26 +483,11 @@ function LoginContent() {
     );
   }
 
-  const getTeacherPassword = (name: string, dept: string) => {
-    const cleanName = name
-      .replace(/^(dr\.|prof\.|mr\.|mrs\.|ms\.)\s*/i, "")
-      .trim();
-    const firstName = cleanName.split(/\s+/)[0].toLowerCase();
-    const shortCode = (
-      DEPT_SHORT_CODES[dept] || dept.split(" ")[0]
-    ).toLowerCase();
-    return `${firstName}@${shortCode}`;
-  };
-
   if (portalType === "teacher" && selectedTeacher) {
     const shortCode = (
       DEPT_SHORT_CODES[selectedDept || ""] || ""
     ).toUpperCase();
     const color = DEPT_COLORS[selectedDept || ""] || "bg-gray-500";
-    const generatedPassword = getTeacherPassword(
-      selectedTeacher.name,
-      selectedDept || "",
-    );
 
     return (
       <div className="min-h-screen bg-muted/30 flex items-center justify-center p-4">
@@ -575,7 +533,7 @@ function LoginContent() {
                       <Input
                         id="password"
                         type={showPassword ? "text" : "password"}
-                        placeholder="••••••••"
+                        placeholder="Enter Password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
@@ -602,29 +560,6 @@ function LoginContent() {
                   Sign In
                 </Button>
               </form>
-
-              <div className="mt-4 p-3 bg-muted rounded-lg">
-                <p className="text-xs font-medium text-center mb-2">
-                  Generated Password
-                </p>
-                <div className="text-xs text-center">
-                  <p>
-                    Password:{" "}
-                    <span className="font-mono font-semibold">
-                      {generatedPassword}
-                    </span>
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="w-full mt-2 text-xs bg-transparent"
-                  onClick={() => setPassword(generatedPassword)}
-                >
-                  Fill Generated Password
-                </Button>
-              </div>
             </CardContent>
           </Card>
         </div>
@@ -684,7 +619,7 @@ function LoginContent() {
                     id="password"
                     name="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Enter any password"
+                    placeholder="Enter Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
@@ -715,80 +650,6 @@ function LoginContent() {
                 Sign In
               </Button>
             </form>
-
-            {portalType === "student" ? (
-              <div className="mt-4 p-3 bg-muted rounded-lg">
-                <p className="text-xs font-medium text-center mb-2">
-                  Try Any Roll Number
-                </p>
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div
-                    className="bg-background p-2 rounded cursor-pointer hover:bg-accent text-center"
-                    onClick={() => fillDemoCredentials("34900122001", "any")}
-                  >
-                    <span className="font-semibold">CSE 2022</span>
-                    <br />
-                    <span className="font-mono">34900122001</span>
-                  </div>
-                  <div
-                    className="bg-background p-2 rounded cursor-pointer hover:bg-accent text-center"
-                    onClick={() => fillDemoCredentials("34900223020", "any")}
-                  >
-                    <span className="font-semibold">ECE 2023</span>
-                    <br />
-                    <span className="font-mono">34900223020</span>
-                  </div>
-                  <div
-                    className="bg-background p-2 rounded cursor-pointer hover:bg-accent text-center"
-                    onClick={() => fillDemoCredentials("34901624012", "any")}
-                  >
-                    <span className="font-semibold">EE 2024</span>
-                    <br />
-                    <span className="font-mono">34901624012</span>
-                  </div>
-                  <div
-                    className="bg-background p-2 rounded cursor-pointer hover:bg-accent text-center"
-                    onClick={() => fillDemoCredentials("34900525007", "any")}
-                  >
-                    <span className="font-semibold">CE 2025</span>
-                    <br />
-                    <span className="font-mono">34900525007</span>
-                  </div>
-                </div>
-                <p className="text-xs text-muted-foreground text-center mt-2">
-                  Or try any valid format: 349 + dept + year + serial
-                </p>
-              </div>
-            ) : (
-              <div className="mt-4 p-3 bg-muted rounded-lg">
-                <p className="text-xs font-medium text-center mb-2">
-                  Demo Credentials
-                </p>
-                <div className="text-xs text-center space-y-1">
-                  <p>
-                    Username:{" "}
-                    <span className="font-mono font-semibold">
-                      {portal.demoUsername}
-                    </span>
-                  </p>
-                  <p>
-                    Password:{" "}
-                    <span className="font-mono font-semibold">
-                      {portal.demoPassword}
-                    </span>
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="w-full mt-2 text-xs bg-transparent"
-                  onClick={() => fillDemoCredentials()}
-                >
-                  Fill Demo Credentials
-                </Button>
-              </div>
-            )}
           </CardContent>
         </Card>
       </div>

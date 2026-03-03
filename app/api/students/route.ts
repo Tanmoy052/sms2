@@ -1,11 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getStudentsFromDB, addStudentToDB } from "@/lib/student-db";
+import {
+  getStudentsFromDB,
+  addStudentToDB,
+  getStudentCredentials,
+} from "@/lib/student-db";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   const students = await getStudentsFromDB();
-  return NextResponse.json(students);
+  const credentials = await getStudentCredentials();
+
+  const studentsWithCreds = students.map((s) => {
+    const cred = credentials.find((c) => c.studentId === s.id);
+    return {
+      ...s,
+      password: cred?.password || "", // Include password for Admin view
+    };
+  });
+
+  return NextResponse.json(studentsWithCreds);
 }
 
 export async function POST(request: NextRequest) {

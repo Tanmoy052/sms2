@@ -169,7 +169,7 @@ export function LandingHero() {
   return (
     <div className="min-h-screen bg-background overflow-hidden">
       {/* Header */}
-      <header className="bg-white/90 backdrop-blur-sm sticky top-0 z-50 shadow-sm">
+      <header className="bg-white/90 backdrop-blur-sm fixed top-0 left-0 right-0 z-50 shadow-sm">
         <div className="container mx-auto px-4 h-12 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Image
@@ -256,7 +256,7 @@ export function LandingHero() {
       </header>
 
       {/* Hero Section */}
-      <section className="relative h-[calc(100vh-3rem)] min-h-[500px] flex items-center justify-center overflow-hidden bg-slate-900/5 py-0">
+      <section className="relative h-screen min-h-[500px] flex items-center justify-center overflow-hidden bg-slate-900/5 pt-12">
         <div className="absolute inset-0 bg-slate-900/5 -z-10" />
 
         {/* 3D Carousel Container */}

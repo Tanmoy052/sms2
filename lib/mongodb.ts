@@ -28,9 +28,9 @@ export const connectDB = async () => {
     const opts = {
       dbName: MONGODB_DB,
       bufferCommands: false,
-      serverSelectionTimeoutMS: 10000, // 10 seconds
-      connectTimeoutMS: 15000,
-      family: 4,
+      serverSelectionTimeoutMS: 15000, // Increase to 15 seconds
+      connectTimeoutMS: 20000,
+      family: 4, // Force IPv4
     };
 
     const maskedUri = MONGODB_URI.replace(/\/\/.*@/, "//****:****@");
@@ -90,10 +90,15 @@ export async function connectToDatabase(): Promise<{
     return { client: cachedClient, db: cachedDb };
   }
 
-  const client = new MongoClient(MONGODB_URI);
+  const client = new MongoClient(MONGODB_URI, {
+    serverSelectionTimeoutMS: 15000,
+    connectTimeoutMS: 20000,
+    family: 4,
+  });
 
   try {
-    console.log("🔄 Connecting to MongoDB at", MONGODB_URI);
+    const maskedUri = MONGODB_URI.replace(/\/\/.*@/, "//****:****@");
+    console.log("🔄 Connecting to MongoDB (MongoClient) at", maskedUri);
     await client.connect();
     console.log("✅ MongoDB connected successfully");
     const db = client.db(MONGODB_DB);

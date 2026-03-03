@@ -52,24 +52,45 @@ import {
   Globe,
   Plus,
   Trash2,
+  Shield,
 } from "lucide-react";
 import { FileUpload } from "@/components/ui/file-upload";
 import type { Student, Attendance, Notice, Project } from "@/lib/types";
 import { useAttendance, useNotices, useProjects } from "@/hooks/use-api";
 import { parseStudentRollNumber } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
+import { UpdateStudentCredentials } from "@/components/student/update-credentials";
+import type { StudentCredentials } from "@/lib/types";
+import { useCallback } from "react";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export default function StudentDashboard() {
   const router = useRouter();
   const [student, setStudent] = useState<Student | null>(null);
+  const [studentCreds, setStudentCreds] = useState<StudentCredentials | null>(
+    null,
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("profile");
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isNoticeAddOpen, setIsNoticeAddOpen] = useState(false);
   const [isNoticeEditOpen, setIsNoticeEditOpen] = useState(false);
   const [editNotice, setEditNotice] = useState<Notice | null>(null);
+
+  const fetchCreds = useCallback(async (userId: string) => {
+    try {
+      const credsRes = await fetch(
+        `/api/students/credentials?studentId=${userId}`,
+      );
+      if (credsRes.ok) {
+        const credsData = await credsRes.json();
+        setStudentCreds(credsData);
+      }
+    } catch (err) {
+      console.error("Error fetching student credentials:", err);
+    }
+  }, []);
 
   const {
     notices,
@@ -99,6 +120,7 @@ export default function StudentDashboard() {
           return;
         }
         setStudent(session.user as Student);
+        await fetchCreds(session.userId);
       } catch {
         router.push("/login?type=student");
       } finally {
@@ -269,6 +291,10 @@ export default function StudentDashboard() {
             <TabsTrigger value="notices" className="gap-2">
               <Bell className="h-4 w-4" />
               Notices
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="gap-2">
+              <Shield className="h-4 w-4" />
+              Update User
             </TabsTrigger>
           </TabsList>
 
@@ -662,6 +688,13 @@ export default function StudentDashboard() {
                 </DialogContent>
               </Dialog>
             </div>
+          </TabsContent>
+
+          <TabsContent value="settings">
+            <UpdateStudentCredentials
+              currentCreds={studentCreds}
+              onSuccess={() => fetchCreds(student.id)}
+            />
           </TabsContent>
         </Tabs>
       </main>

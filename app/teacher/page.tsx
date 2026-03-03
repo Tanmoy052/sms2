@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
@@ -63,6 +63,7 @@ import {
   CheckCircle,
   XCircle,
   Clock,
+  Shield,
 } from "lucide-react";
 import { FileUpload } from "@/components/ui/file-upload";
 import type {
@@ -80,10 +81,15 @@ import { SUBJECTS_BY_DEPARTMENT } from "@/lib/subjects";
 import { Combobox } from "@/components/ui/combobox";
 import { mutate } from "swr";
 import { formatDate } from "@/lib/utils";
+import { UpdateTeacherCredentials } from "@/components/teacher/update-credentials";
+import type { TeacherCredentials } from "@/lib/types";
 
 export default function TeacherDashboard() {
   const router = useRouter();
   const [teacher, setTeacher] = useState<Teacher | null>(null);
+  const [teacherCreds, setTeacherCreds] = useState<TeacherCredentials | null>(
+    null,
+  );
   const [activeTab, setActiveTab] = useState("profile");
   const [isLoading, setIsLoading] = useState(true);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -92,6 +98,20 @@ export default function TeacherDashboard() {
   const { notices } = useNotices();
   const { projects } = useProjects();
   const { attendance } = useAttendance();
+
+  const fetchCreds = useCallback(async (userId: string) => {
+    try {
+      const credsRes = await fetch(
+        `/api/teachers/credentials?teacherId=${userId}`,
+      );
+      if (credsRes.ok) {
+        const credsData = await credsRes.json();
+        setTeacherCreds(credsData);
+      }
+    } catch (err) {
+      console.error("Error fetching teacher credentials:", err);
+    }
+  }, []);
 
   useEffect(() => {
     async function checkSession() {
@@ -103,6 +123,9 @@ export default function TeacherDashboard() {
           return;
         }
         setTeacher(session.user as Teacher);
+
+        // Fetch credentials for the update section
+        await fetchCreds(session.userId);
       } catch {
         router.push("/login?type=teacher");
       } finally {
@@ -110,7 +133,7 @@ export default function TeacherDashboard() {
       }
     }
     checkSession();
-  }, [router]);
+  }, [router, fetchCreds]);
 
   async function handleUpdateProfile(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -222,6 +245,10 @@ export default function TeacherDashboard() {
               <Bell className="h-4 w-4" />
               Notices
             </TabsTrigger>
+            <TabsTrigger value="settings" className="gap-2">
+              <Shield className="h-4 w-4" />
+              Update User
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="profile">
@@ -251,6 +278,13 @@ export default function TeacherDashboard() {
 
           <TabsContent value="notices">
             <NoticesTab notices={activeNotices} teacherId={teacher.id} />
+          </TabsContent>
+
+          <TabsContent value="settings">
+            <UpdateTeacherCredentials
+              currentCreds={teacherCreds}
+              onSuccess={() => fetchCreds(teacher.id)}
+            />
           </TabsContent>
         </Tabs>
       </main>

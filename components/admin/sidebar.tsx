@@ -14,6 +14,7 @@ import {
   Menu,
   X,
   CalendarCheck,
+  Shield,
 } from "lucide-react";
 import { useState, useCallback, memo } from "react";
 
@@ -24,6 +25,7 @@ const navItems = [
   { href: "/admin/attendance", label: "Attendance", icon: CalendarCheck },
   { href: "/admin/notices", label: "Notices", icon: Bell },
   { href: "/admin/projects", label: "Projects", icon: FolderKanban },
+  { href: "/admin#update-credentials", label: "Update User", icon: Shield },
 ];
 
 const NavItem = memo(function NavItem({
