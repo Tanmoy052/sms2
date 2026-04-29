@@ -1,8 +1,7 @@
-import { MongoClient, Db } from "mongodb";
-import mongoose from "mongoose";
+import { MongoClient, Db } from 'mongodb';
+import mongoose from 'mongoose';
 
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017";
-const MONGODB_DB = process.env.MONGODB_DB || "sms";
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/sms';
 
 /**
  * Global is used here to maintain a cached connection across hot reloads
@@ -26,42 +25,40 @@ export const connectDB = async () => {
 
   if (!cached.promise) {
     const opts = {
-      dbName: MONGODB_DB,
       bufferCommands: false,
       serverSelectionTimeoutMS: 15000, // Increase to 15 seconds
       connectTimeoutMS: 20000,
       family: 4, // Force IPv4
     };
 
-    const maskedUri = MONGODB_URI.replace(/\/\/.*@/, "//****:****@");
-    console.log("🔄 Attempting Mongoose connection...");
-    console.log("📍 Masked URI:", maskedUri);
-    console.log("📊 Target Database:", MONGODB_DB);
+    const maskedUri = MONGODB_URI.replace(/\/\/.*@/, '//****:****@');
+    console.log('🔄 Attempting Mongoose connection...');
+    console.log('📍 Masked URI:', maskedUri);
 
     cached.promise = mongoose
       .connect(MONGODB_URI, opts)
       .then((mongooseInstance) => {
-        console.log("✅ MongoDB connected successfully (Mongoose)");
+        console.log('✅ MongoDB connected successfully (Mongoose)');
         return mongooseInstance;
       })
       .catch((error: any) => {
-        console.error("❌ Mongoose connection failed!");
-        console.error("🔍 Error Name:", error.name);
-        console.error("📝 Error Message:", error.message);
+        console.error('❌ Mongoose connection failed!');
+        console.error('🔍 Error Name:', error.name);
+        console.error('📝 Error Message:', error.message);
         if (error.reason) {
           console.error(
-            "📋 Error Reason:",
-            JSON.stringify(error.reason, null, 2),
+            '📋 Error Reason:',
+            JSON.stringify(error.reason, null, 2)
           );
         }
 
-        if (error.name === "MongoServerSelectionError") {
+        if (error.name === 'MongoServerSelectionError') {
           console.error(
-            "💡 Suggestion: Check if your IP is whitelisted in MongoDB Atlas (Network Access -> 0.0.0.0/0).",
+            '💡 Suggestion: Check if your IP is whitelisted in MongoDB Atlas (Network Access -> 0.0.0.0/0).'
           );
-        } else if (error.name === "MongoNetworkError") {
+        } else if (error.name === 'MongoNetworkError') {
           console.error(
-            "💡 Suggestion: Check your internet connection or firewall settings.",
+            '💡 Suggestion: Check your internet connection or firewall settings.'
           );
         }
         cached.promise = null; // Reset promise so next call can retry
@@ -97,22 +94,21 @@ export async function connectToDatabase(): Promise<{
   });
 
   try {
-    const maskedUri = MONGODB_URI.replace(/\/\/.*@/, "//****:****@");
-    console.log("🔄 Connecting to MongoDB (MongoClient) at", maskedUri);
+    const maskedUri = MONGODB_URI.replace(/\/\/.*@/, '//****:****@');
+    console.log('🔄 Connecting to MongoDB (MongoClient) at', maskedUri);
     await client.connect();
-    console.log("✅ MongoDB connected successfully");
-    const db = client.db(MONGODB_DB);
-    console.log("📊 Using database:", MONGODB_DB);
+    console.log('✅ MongoDB connected successfully');
+    const db = client.db();
 
     cachedClient = client;
     cachedDb = db;
 
     return { client, db };
   } catch (error) {
-    console.error("❌ Failed to connect to MongoDB:", error);
+    console.error('❌ Failed to connect to MongoDB:', error);
     console.error(
-      "Error details:",
-      error instanceof Error ? error.message : String(error),
+      'Error details:',
+      error instanceof Error ? error.message : String(error)
     );
     throw error;
   }

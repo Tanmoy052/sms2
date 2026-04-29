@@ -10,27 +10,26 @@
 ## MongoDB Setup
 
 1. **For Local Development:**
-
    - Install MongoDB Community Server from https://www.mongodb.com/try/download/community
    - Start MongoDB service (default port 27017)
    - The app will connect to `mongodb://localhost:27017/sms`
 
 2. **For Production (Vercel + MongoDB Atlas):**
-
    - Create a free account at https://www.mongodb.com/atlas
    - Create a new cluster and database
-   - Get your connection string from Atlas
-   - Add these environment variables in Vercel:
-     - `MONGODB_URI`: Your MongoDB connection string
-     - `MONGODB_DB`: Your database name (default: `sms`)
+   - Get your connection string from Atlas (use `mongodb+srv://` format)
+   - Add this environment variable in Vercel:
+     - `MONGODB_URI`: Your MongoDB connection string (should include database name, e.g., `mongodb+srv://user:pass@cluster.mongodb.net/sms?retryWrites=true&w=majority`)
 
 3. **Environment Variables:**
    Create a `.env.local` file in the project root:
+
    ```
-   MONGODB_URI=mongodb://localhost:27017
-   MONGODB_DB=sms
+   MONGODB_URI=mongodb+srv://user:password@cluster.mongodb.net/sms?retryWrites=true&w=majority
    ```
-   For production, replace with your Atlas connection string.
+
+   - The database name (`sms`) is included in the URI
+   - For local development, use: `MONGODB_URI=mongodb://localhost:27017/sms`
 
 ## Run Locally (Development)
 
@@ -59,9 +58,11 @@
 3. Open in browser:
    - `http://localhost:3000`
 4. If port `3000` is in use, run on another port:
+
    ```bash
    npm run start -- -p 3001
    ```
+
    - Then open `http://localhost:3001`
 
 ## Quick Test (Demo Logins)
@@ -81,7 +82,7 @@
    - Install command: `npm install`
 5. **Add Environment Variables:**
    - Go to Project Settings → Environment Variables
-   - Add `MONGODB_URI` and `MONGODB_DB` (see MongoDB Setup section)
+   - Add `MONGODB_URI` with your MongoDB Atlas connection string (see MongoDB Setup section)
 6. Click `Deploy`
 7. Open the provided URL (e.g., `https://your-project.vercel.app`)
 
