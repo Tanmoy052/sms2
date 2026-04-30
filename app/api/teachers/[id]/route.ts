@@ -9,20 +9,26 @@ import {
   getTeacherCredentialByTeacherId,
   deleteTeacherCredentialsByTeacherId,
 } from "@/lib/teacher-db";
-import { requireRole } from "@/lib/api-auth";
+import { requireAuth, requireRole } from "@/lib/api-auth";
 import { TeacherUpdateSchema } from "@/lib/validators";
 
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const auth = await requireRole("admin");
+  const auth = await requireAuth();
   if (!auth.ok) return auth.response;
 
   try {
     const { id } = await params;
     if (!ObjectId.isValid(id)) {
       return NextResponse.json({ error: "Invalid teacher id" }, { status: 400 });
+    }
+    const canEdit =
+      auth.session.role === "admin" ||
+      (auth.session.role === "teacher" && auth.session.userId === id);
+    if (!canEdit) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
     const body = await request.json();
     const parsed = TeacherUpdateSchema.safeParse(body);

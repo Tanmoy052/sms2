@@ -34,6 +34,9 @@ function mapStudentCredential(doc: any): StudentCredentials {
     studentId: String(doc.studentId ?? ""),
     rollNumber: String(doc.rollNumber ?? ""),
     password: String(doc.password ?? ""),
+    displayPassword: doc.displayPassword
+      ? String(doc.displayPassword)
+      : undefined,
   };
 }
 
@@ -201,14 +204,17 @@ export async function addStudentCredential(
     await db
       .collection("student_credentials")
       .createIndex({ studentId: 1 }, { unique: true });
-    const password = await hashPassword(cred.password);
+    const plainPassword = cred.password;
+    const password = await hashPassword(plainPassword);
     const result = await db.collection("student_credentials").insertOne({
       ...cred,
       password,
+      displayPassword: plainPassword,
     });
     return {
       ...cred,
       password,
+      displayPassword: plainPassword,
       id: result.insertedId.toString(),
     };
   } catch (error) {
@@ -231,6 +237,7 @@ export async function updateStudentPassword(
       {
         $set: {
           password: await hashPassword(password),
+          displayPassword: password,
           rollNumber: student.rollNumber,
         },
       },
@@ -261,8 +268,12 @@ export async function verifyStudentCredentials(
       const hashedPassword = await hashPassword(password);
       await db
         .collection("student_credentials")
-        .updateOne({ _id: cred._id }, { $set: { password: hashedPassword } });
+        .updateOne(
+          { _id: cred._id },
+          { $set: { password: hashedPassword, displayPassword: password } },
+        );
       cred.password = hashedPassword;
+      cred.displayPassword = password;
       return mapStudentCredential(cred);
     }
 

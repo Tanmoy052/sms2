@@ -148,7 +148,13 @@ export async function GET() {
             .collection("teacher_credentials")
             .updateOne(
               { teacherId },
-              { $set: { username: finalUsername, password: hashedPassword } },
+              {
+                $set: {
+                  username: finalUsername,
+                  password: hashedPassword,
+                  displayPassword: correctPassword,
+                },
+              },
             );
           logs.push(
             `Updated credentials for ${teacher.name}: ${finalUsername} (was ${existingCred.username})`,
@@ -160,6 +166,7 @@ export async function GET() {
           teacherId,
           username: finalUsername,
           password: hashedPassword,
+          displayPassword: correctPassword,
           id: new Date().getTime().toString(), // simple ID
         });
         logs.push(`Created credentials for ${teacher.name}: ${finalUsername}`);

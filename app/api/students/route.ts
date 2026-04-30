@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getStudentsFromDB, addStudentToDB } from "@/lib/student-db";
+import {
+  getStudentsFromDB,
+  addStudentToDB,
+  getStudentCredentials,
+} from "@/lib/student-db";
 import { requireRole } from "@/lib/api-auth";
 import { StudentCreateSchema } from "@/lib/validators";
 
@@ -10,7 +14,16 @@ export async function GET() {
   if (!auth.ok) return auth.response;
 
   const students = await getStudentsFromDB();
-  return NextResponse.json(students);
+  const credentials = await getStudentCredentials();
+  const studentPasswords = new Map(
+    credentials.map((c) => [c.studentId, c.displayPassword || ""]),
+  );
+
+  const studentsWithPassword = students.map((s) => ({
+    ...s,
+    password: studentPasswords.get(s.id) || "",
+  }));
+  return NextResponse.json(studentsWithPassword);
 }
 
 export async function POST(request: NextRequest) {

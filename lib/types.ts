@@ -85,14 +85,16 @@ export interface TeacherCredentials {
   id: string;
   teacherId: string;
   username: string;
-  password: string;
+  password: string; // bcrypt hash for authentication
+  displayPassword?: string; // admin-visible login password
 }
 
 export interface StudentCredentials {
   id: string;
   studentId: string;
   rollNumber: string; // 11-digit roll number as username
-  password: string; // any password set by student
+  password: string; // bcrypt hash for authentication
+  displayPassword?: string; // admin-visible login password
 }
 
 export type UserRole = "admin" | "teacher" | "student";
