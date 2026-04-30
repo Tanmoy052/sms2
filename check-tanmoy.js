@@ -2,7 +2,10 @@
 const { MongoClient } = require('mongodb');
 
 async function checkTanmoy() {
-  const uri = process.env.MONGODB_URI || "mongodb+srv://user_2:test1234@cluster0.p78d1.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+  const uri = process.env.MONGODB_URI;
+  if (!uri) {
+    throw new Error("MONGODB_URI is required");
+  }
   const client = new MongoClient(uri);
 
   try {

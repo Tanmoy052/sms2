@@ -1,7 +1,11 @@
 import { MongoClient, Db } from 'mongodb';
 import mongoose from 'mongoose';
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/sms';
+const mongoUri = process.env.MONGODB_URI;
+if (!mongoUri) {
+  throw new Error("MONGODB_URI is required");
+}
+const MONGODB_URI: string = mongoUri;
 
 /**
  * Global is used here to maintain a cached connection across hot reloads

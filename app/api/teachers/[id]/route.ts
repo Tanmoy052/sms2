@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { ObjectId } from "mongodb";
 import {
   updateTeacherInDB,
   deleteTeacherFromDB,
@@ -8,56 +9,60 @@ import {
   getTeacherCredentialByTeacherId,
   deleteTeacherCredentialsByTeacherId,
 } from "@/lib/teacher-db";
+import { requireRole } from "@/lib/api-auth";
+import { TeacherUpdateSchema } from "@/lib/validators";
 
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const auth = await requireRole("admin");
+  if (!auth.ok) return auth.response;
+
   try {
     const { id } = await params;
+    if (!ObjectId.isValid(id)) {
+      return NextResponse.json({ error: "Invalid teacher id" }, { status: 400 });
+    }
     const body = await request.json();
+    const parsed = TeacherUpdateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.flatten() },
+        { status: 400 },
+      );
+    }
 
     // 1. Update teacher details
-    const updatedTeacher = await updateTeacherInDB(id, body);
+    const updatedTeacher = await updateTeacherInDB(id, parsed.data);
 
     if (!updatedTeacher) {
       return NextResponse.json({ error: "Teacher not found" }, { status: 404 });
     }
 
     // 2. Check if name or department changed to regenerate credentials
-    if (body.name || body.department) {
-      console.log(
-        `[Teacher Update] Regenerating credentials for ${updatedTeacher.name}`,
-      );
+    if (parsed.data.name || parsed.data.department) {
       const { username, password } = await generateUniqueTeacherCredentials(
         updatedTeacher.name,
         updatedTeacher.department,
         id,
       );
 
-      console.log(`[Teacher Update] New credentials generated: ${username}`);
-
       // Check if credentials exist for this teacher
       const existingCred = await getTeacherCredentialByTeacherId(id);
 
       if (existingCred) {
-        console.log(`[Teacher Update] Updating existing credential for ${id}`);
         await updateTeacherCredentialByTeacherId(id, {
           username,
           password,
         });
       } else {
-        console.log(`[Teacher Update] Adding new credential for ${id}`);
         await addTeacherCredential({
           teacherId: id,
           username,
           password,
         });
       }
-
-      console.log(
-        `Updated credentials for ${updatedTeacher.name}: ${username}`,
-      );
     }
 
     return NextResponse.json(updatedTeacher);
@@ -74,8 +79,14 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const auth = await requireRole("admin");
+  if (!auth.ok) return auth.response;
+
   try {
     const { id } = await params;
+    if (!ObjectId.isValid(id)) {
+      return NextResponse.json({ error: "Invalid teacher id" }, { status: 400 });
+    }
     const success = await deleteTeacherFromDB(id);
 
     if (!success) {

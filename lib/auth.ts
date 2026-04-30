@@ -20,6 +20,7 @@ import {
   // exported type for new student payload
   NewStudent,
 } from "./student-db";
+import { comparePassword, hashPassword, looksHashedPassword } from "./password";
 
 const SESSION_COOKIE = "cgec_session";
 const ROLE_COOKIE = "cgec_role";
@@ -27,8 +28,20 @@ const ROLE_COOKIE = "cgec_role";
 // Admin authentication
 export async function verifyAdmin(username: string, password: string) {
   const admin = await getAdminCredentials();
-  if (admin && admin.username === username && admin.password === password) {
-    return admin;
+  if (admin && admin.username === username) {
+    if (!looksHashedPassword(admin.password)) {
+      if (admin.password !== password) return null;
+      const { db } = await connectToDatabase();
+      const hashed = await hashPassword(password);
+      await db
+        .collection("admins")
+        .updateOne({ id: admin.id }, { $set: { password: hashed } });
+      return { ...admin, password: hashed };
+    }
+    const isValid = await comparePassword(password, admin.password);
+    if (isValid) {
+      return admin;
+    }
   }
   return null;
 }

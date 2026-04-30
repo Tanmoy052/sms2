@@ -1,17 +1,38 @@
 import { connectToDatabase } from "@/lib/mongodb";
 import { type Admin } from "@/lib/types";
-import { ADMIN_CREDENTIALS } from "@/lib/constants";
+import { hashPassword } from "@/lib/password";
 
 const ADMIN_ID = "1"; // Constant ID for the single admin for now
+
+function getEnvAdmin() {
+  const username = process.env.ADMIN_USERNAME;
+  const password = process.env.ADMIN_PASSWORD;
+  const name = process.env.ADMIN_NAME || "System Administrator";
+  const role = "super-admin" as const;
+
+  if (!username || !password) {
+    return null;
+  }
+
+  return { id: ADMIN_ID, username, password, name, role };
+}
 
 export async function getAdminCredentials(): Promise<Admin | null> {
   try {
     const { db } = await connectToDatabase();
     const admin = await db.collection("admins").findOne({ id: ADMIN_ID });
-    
+
     if (!admin) {
-      // If not in DB, return from constants (seed data)
-      return ADMIN_CREDENTIALS[0];
+      const envAdmin = getEnvAdmin();
+      if (!envAdmin) return null;
+      const hashedPassword = await hashPassword(envAdmin.password);
+      await db.collection("admins").insertOne({
+        ...envAdmin,
+        password: hashedPassword,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+      return { ...envAdmin, password: hashedPassword };
     }
 
     return {
@@ -23,22 +44,27 @@ export async function getAdminCredentials(): Promise<Admin | null> {
     };
   } catch (error) {
     console.error("Error fetching admin credentials:", error);
-    return ADMIN_CREDENTIALS[0];
+    return null;
   }
 }
 
 export async function updateAdminCredentials(username: string, password: string): Promise<boolean> {
   try {
     const { db } = await connectToDatabase();
-    
+    const hashedPassword = await hashPassword(password);
+
     // Check if admin exists in DB, if not create from constants first
     const existing = await db.collection("admins").findOne({ id: ADMIN_ID });
-    
+
     if (!existing) {
+      const envAdmin = getEnvAdmin();
       await db.collection("admins").insertOne({
-        ...ADMIN_CREDENTIALS[0],
+        id: ADMIN_ID,
+        name: envAdmin?.name || "System Administrator",
+        role: envAdmin?.role || "super-admin",
         username,
-        password,
+        password: hashedPassword,
+        createdAt: new Date(),
         updatedAt: new Date(),
       });
       return true;
@@ -48,8 +74,8 @@ export async function updateAdminCredentials(username: string, password: string)
       { id: ADMIN_ID },
       { 
         $set: { 
-          username, 
-          password,
+          username,
+          password: hashedPassword,
           updatedAt: new Date()
         } 
       }

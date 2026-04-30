@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAttendanceFromDB, addAttendanceToDB } from "@/lib/attendance-db";
 import type { Attendance } from "@/lib/types";
+import { z } from "zod";
 
 export const dynamic = "force-dynamic";
+
+const AttendanceCreateSchema = z.object({
+  studentId: z.string().min(1),
+  date: z.string().min(1),
+  status: z.enum(["present", "absent", "late"]),
+  subject: z.string().min(1),
+  markedBy: z.string().min(1),
+});
 
 export async function GET(request: NextRequest) {
   try {
@@ -41,14 +50,14 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { studentId, date, status, subject, markedBy } = body;
-
-    if (!studentId || !date || !status || !subject || !markedBy) {
+    const parsed = AttendanceCreateSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "Missing required fields" },
+        { error: parsed.error.flatten() },
         { status: 400 },
       );
     }
+    const { studentId, date, status, subject, markedBy } = parsed.data;
 
     const newAttendance: Omit<Attendance, "id"> = {
       studentId,

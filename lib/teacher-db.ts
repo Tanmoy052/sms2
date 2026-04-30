@@ -6,6 +6,11 @@ import {
   type Teacher,
   type TeacherCredentials,
 } from "@/lib/types";
+import {
+  comparePassword,
+  hashPassword,
+  looksHashedPassword,
+} from "@/lib/password";
 
 function mapTeacher(doc: any): Teacher {
   return {
@@ -40,7 +45,32 @@ function mapTeacherCredential(doc: any): TeacherCredentials {
 export async function getTeachersFromDB(): Promise<Teacher[]> {
   try {
     const { db } = await connectToDatabase();
-    const teachers = await db.collection("teachers").find({}).toArray();
+    await db.collection("teachers").createIndex({ employeeId: 1 }, { unique: true });
+    await db.collection("teachers").createIndex({ status: 1 });
+    const teachers = await db
+      .collection("teachers")
+      .find(
+        {},
+        {
+          projection: {
+            name: 1,
+            email: 1,
+            employeeId: 1,
+            department: 1,
+            designation: 1,
+            phone: 1,
+            qualification: 1,
+            specialization: 1,
+            joiningDate: 1,
+            status: 1,
+            photo: 1,
+            username: 1,
+            createdAt: 1,
+            updatedAt: 1,
+          },
+        },
+      )
+      .toArray();
     return teachers.map(mapTeacher);
   } catch (error) {
     console.error("Error fetching teachers:", error);
@@ -54,9 +84,13 @@ export async function updateTeacherCredentialByTeacherId(
 ): Promise<boolean> {
   try {
     const { db } = await connectToDatabase();
+    const safeUpdates = { ...updates };
+    if (safeUpdates.password) {
+      safeUpdates.password = await hashPassword(safeUpdates.password);
+    }
     const result = await db
       .collection("teacher_credentials")
-      .updateOne({ teacherId }, { $set: updates });
+      .updateOne({ teacherId }, { $set: safeUpdates });
     return result.modifiedCount > 0;
   } catch (error) {
     console.error("Error updating teacher credential:", error);
@@ -227,9 +261,20 @@ export async function addTeacherCredential(
 ): Promise<TeacherCredentials> {
   try {
     const { db } = await connectToDatabase();
-    const result = await db.collection("teacher_credentials").insertOne(cred);
+    await db
+      .collection("teacher_credentials")
+      .createIndex({ username: 1 }, { unique: true });
+    await db
+      .collection("teacher_credentials")
+      .createIndex({ teacherId: 1 }, { unique: true });
+    const password = await hashPassword(cred.password);
+    const result = await db.collection("teacher_credentials").insertOne({
+      ...cred,
+      password,
+    });
     return {
       ...cred,
+      password,
       id: result.insertedId.toString(),
     };
   } catch (error) {
@@ -261,8 +306,23 @@ export async function verifyTeacherCredentials(
     const { db } = await connectToDatabase();
     const cred = await db
       .collection("teacher_credentials")
-      .findOne({ username, password });
+      .findOne({ username });
     if (!cred) return null;
+    const storedPassword = String(cred.password ?? "");
+    if (!storedPassword) return null;
+
+    if (!looksHashedPassword(storedPassword)) {
+      if (storedPassword !== password) return null;
+      const hashedPassword = await hashPassword(password);
+      await db
+        .collection("teacher_credentials")
+        .updateOne({ _id: cred._id }, { $set: { password: hashedPassword } });
+      cred.password = hashedPassword;
+      return mapTeacherCredential(cred);
+    }
+
+    const isValid = await comparePassword(password, storedPassword);
+    if (!isValid) return null;
     return mapTeacherCredential(cred);
   } catch (error) {
     console.error("Error verifying teacher credentials:", error);

@@ -6,41 +6,60 @@ import {
   getTeacherCredentials,
   generateUniqueTeacherCredentials,
 } from "@/lib/teacher-db";
+import { requireRole } from "@/lib/api-auth";
+import { TeacherCreateSchema } from "@/lib/validators";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
+  const auth = await requireRole("admin");
+  if (!auth.ok) return auth.response;
+
   const { searchParams } = new URL(request.url);
   const department = searchParams.get("department");
 
   const teachers = await getTeachersFromDB();
   const credentials = await getTeacherCredentials();
-
-  const teachersWithCreds = teachers.map((t) => {
-    const cred = credentials.find((c) => c.teacherId === t.id);
-    return {
-      ...t,
-      username: cred?.username || "",
-      password: cred?.password || "", // Include password for Admin view
-    };
-  });
+  const teacherUsernames = new Map(
+    credentials.map((c) => [c.teacherId, c.username]),
+  );
+  const safeTeachers = teachers.map((t) => ({
+    ...t,
+    username: teacherUsernames.get(t.id) || "",
+    password: undefined,
+  }));
 
   if (department) {
-    const filteredTeachers = teachersWithCreds.filter(
+    const filteredTeachers = safeTeachers.filter(
       (t) => t.department === department,
     );
     return NextResponse.json({ teachers: filteredTeachers });
   }
 
-  return NextResponse.json(teachersWithCreds);
+  return NextResponse.json(safeTeachers);
 }
 
 export async function POST(request: NextRequest) {
+  const auth = await requireRole("admin");
+  if (!auth.ok) return auth.response;
+
   try {
     const body = await request.json();
+    const parsed = TeacherCreateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.flatten() },
+        { status: 400 },
+      );
+    }
 
     // Add teacher to database
-    const newTeacher = await addTeacherToDB(body);
+    const now = new Date().toISOString();
+    const newTeacher = await addTeacherToDB({
+      ...parsed.data,
+      createdAt: now,
+      updatedAt: now,
+    });
 
     // Generate and add credentials
     if (newTeacher && newTeacher.id) {
@@ -54,10 +73,6 @@ export async function POST(request: NextRequest) {
         username,
         password,
       });
-
-      console.log(
-        `Generated credentials for ${newTeacher.name}: ${username} / ${password}`,
-      );
     }
 
     return NextResponse.json(newTeacher, { status: 201 });

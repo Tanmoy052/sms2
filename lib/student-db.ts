@@ -1,6 +1,11 @@
 import { connectToDatabase } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import type { Student, StudentCredentials } from "@/lib/types";
+import {
+  comparePassword,
+  hashPassword,
+  looksHashedPassword,
+} from "@/lib/password";
 
 function mapStudent(doc: any): Student {
   return {
@@ -35,7 +40,33 @@ function mapStudentCredential(doc: any): StudentCredentials {
 export async function getStudentsFromDB(): Promise<Student[]> {
   try {
     const { db } = await connectToDatabase();
-    const students = await db.collection("students").find({}).toArray();
+    await db.collection("students").createIndex({ rollNumber: 1 }, { unique: true });
+    await db.collection("students").createIndex({ status: 1 });
+    const students = await db
+      .collection("students")
+      .find(
+        {},
+        {
+          projection: {
+            name: 1,
+            email: 1,
+            rollNumber: 1,
+            department: 1,
+            semester: 1,
+            phone: 1,
+            address: 1,
+            dateOfBirth: 1,
+            admissionYear: 1,
+            guardianName: 1,
+            guardianPhone: 1,
+            status: 1,
+            photo: 1,
+            createdAt: 1,
+            updatedAt: 1,
+          },
+        },
+      )
+      .toArray();
     return students.map(mapStudent);
   } catch (error) {
     console.error("Error fetching students:", error);
@@ -164,9 +195,20 @@ export async function addStudentCredential(
 ): Promise<StudentCredentials> {
   try {
     const { db } = await connectToDatabase();
-    const result = await db.collection("student_credentials").insertOne(cred);
+    await db
+      .collection("student_credentials")
+      .createIndex({ rollNumber: 1 }, { unique: true });
+    await db
+      .collection("student_credentials")
+      .createIndex({ studentId: 1 }, { unique: true });
+    const password = await hashPassword(cred.password);
+    const result = await db.collection("student_credentials").insertOne({
+      ...cred,
+      password,
+    });
     return {
       ...cred,
+      password,
       id: result.insertedId.toString(),
     };
   } catch (error) {
@@ -188,7 +230,7 @@ export async function updateStudentPassword(
       { studentId },
       {
         $set: {
-          password,
+          password: await hashPassword(password),
           rollNumber: student.rollNumber,
         },
       },
@@ -209,8 +251,23 @@ export async function verifyStudentCredentials(
     const { db } = await connectToDatabase();
     const cred = await db
       .collection("student_credentials")
-      .findOne({ rollNumber, password });
+      .findOne({ rollNumber });
     if (!cred) return null;
+    const storedPassword = String(cred.password ?? "");
+    if (!storedPassword) return null;
+
+    if (!looksHashedPassword(storedPassword)) {
+      if (storedPassword !== password) return null;
+      const hashedPassword = await hashPassword(password);
+      await db
+        .collection("student_credentials")
+        .updateOne({ _id: cred._id }, { $set: { password: hashedPassword } });
+      cred.password = hashedPassword;
+      return mapStudentCredential(cred);
+    }
+
+    const isValid = await comparePassword(password, storedPassword);
+    if (!isValid) return null;
     return mapStudentCredential(cred);
   } catch (error) {
     console.error("Error verifying student credentials:", error);

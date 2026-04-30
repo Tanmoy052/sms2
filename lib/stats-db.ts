@@ -13,6 +13,11 @@ export interface DashboardStats {
 export async function getDashboardStats(): Promise<DashboardStats> {
   try {
     const { db } = await connectToDatabase();
+    await Promise.all([
+      db.collection("students").createIndex({ status: 1 }),
+      db.collection("teachers").createIndex({ status: 1 }),
+      db.collection("attendance").createIndex({ studentId: 1, date: 1 }),
+    ]);
 
     const [
       totalStudents,

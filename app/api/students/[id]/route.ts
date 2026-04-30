@@ -1,14 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
+import { ObjectId } from "mongodb";
 import { updateStudentInDB, deleteStudentFromDB } from "@/lib/student-db";
+import { requireRole } from "@/lib/api-auth";
+import { StudentUpdateSchema } from "@/lib/validators";
 
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const auth = await requireRole("admin");
+  if (!auth.ok) return auth.response;
+
   try {
     const { id } = await params;
+    if (!ObjectId.isValid(id)) {
+      return NextResponse.json({ error: "Invalid student id" }, { status: 400 });
+    }
     const body = await request.json();
-    const updatedStudent = await updateStudentInDB(id, body);
+    const parsed = StudentUpdateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.flatten() },
+        { status: 400 },
+      );
+    }
+    const updatedStudent = await updateStudentInDB(id, parsed.data);
 
     if (!updatedStudent) {
       return NextResponse.json({ error: "Student not found" }, { status: 404 });
@@ -28,8 +44,14 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const auth = await requireRole("admin");
+  if (!auth.ok) return auth.response;
+
   try {
     const { id } = await params;
+    if (!ObjectId.isValid(id)) {
+      return NextResponse.json({ error: "Invalid student id" }, { status: 400 });
+    }
     const success = await deleteStudentFromDB(id);
 
     if (!success) {

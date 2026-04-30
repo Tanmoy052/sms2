@@ -1,7 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getNoticesFromDB, addNoticeToDB } from "@/lib/notice-db";
+import { z } from "zod";
 
 export const dynamic = "force-dynamic";
+
+const NoticeCreateSchema = z.object({
+  title: z.string().min(1),
+  content: z.string().min(1),
+  category: z.enum(["general", "academic", "exam", "event"]),
+  publishedAt: z.string().min(1),
+  expiresAt: z.string().nullable(),
+  isActive: z.boolean(),
+});
 
 export async function GET() {
   const notices = await getNoticesFromDB();
@@ -11,7 +21,11 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const newNotice = await addNoticeToDB(body);
+    const parsed = NoticeCreateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    }
+    const newNotice = await addNoticeToDB(parsed.data);
     return NextResponse.json(newNotice, { status: 201 });
   } catch (error) {
     return NextResponse.json(

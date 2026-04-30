@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import { DEPT_SHORT_CODES } from "@/lib/types";
+import { requireRole } from "@/lib/api-auth";
+import { hashPassword } from "@/lib/password";
 
 export async function GET() {
+  const auth = await requireRole("admin");
+  if (!auth.ok) return auth.response;
+
   try {
     const { db } = await connectToDatabase();
 
@@ -120,6 +125,7 @@ export async function GET() {
       deptShort = deptShort.toLowerCase();
       
       const correctPassword = `${baseUsername.split("_")[0]}@${deptShort}`; // firstname@dept
+      const hashedPassword = await hashPassword(correctPassword);
 
       let finalUsername = baseUsername;
       let counter = 1;
@@ -142,7 +148,7 @@ export async function GET() {
             .collection("teacher_credentials")
             .updateOne(
               { teacherId },
-              { $set: { username: finalUsername, password: correctPassword } },
+              { $set: { username: finalUsername, password: hashedPassword } },
             );
           logs.push(
             `Updated credentials for ${teacher.name}: ${finalUsername} (was ${existingCred.username})`,
@@ -153,7 +159,7 @@ export async function GET() {
         await db.collection("teacher_credentials").insertOne({
           teacherId,
           username: finalUsername,
-          password: correctPassword,
+          password: hashedPassword,
           id: new Date().getTime().toString(), // simple ID
         });
         logs.push(`Created credentials for ${teacher.name}: ${finalUsername}`);
