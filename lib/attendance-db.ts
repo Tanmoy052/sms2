@@ -2,6 +2,12 @@ import { connectToDatabase } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import type { Attendance } from "@/lib/types";
 
+function normalizeTimestamp(value: unknown): string {
+  if (value instanceof Date) return value.toISOString();
+  if (typeof value === "string") return value;
+  return new Date().toISOString();
+}
+
 export async function getAttendanceFromDB(): Promise<Attendance[]> {
   try {
     console.log("🔄 Connecting to database...");
@@ -17,8 +23,8 @@ export async function getAttendanceFromDB(): Promise<Attendance[]> {
       status: item.status,
       subject: item.subject,
       markedBy: item.markedBy,
-      createdAt: item.createdAt,
-      updatedAt: item.updatedAt,
+      createdAt: normalizeTimestamp(item.createdAt),
+      updatedAt: normalizeTimestamp(item.updatedAt),
     })) as Attendance[];
 
     console.log("📋 Mapped to", result.length, "attendance objects");
@@ -34,10 +40,11 @@ export async function addAttendanceToDB(
 ): Promise<Attendance> {
   try {
     const { db } = await connectToDatabase();
+    const now = new Date().toISOString();
     const result = await db.collection("attendance").insertOne({
       ...attendance,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: now,
+      updatedAt: now,
     });
     return {
       ...attendance,
@@ -59,7 +66,7 @@ export async function updateAttendanceInDB(
       .collection("attendance")
       .findOneAndUpdate(
         { _id: new ObjectId(id) },
-        { $set: { ...data, updatedAt: new Date() } },
+        { $set: { ...data, updatedAt: new Date().toISOString() } },
         { returnDocument: "after" }
       );
     if (result) {
@@ -70,8 +77,8 @@ export async function updateAttendanceInDB(
         status: result.status,
         subject: result.subject,
         markedBy: result.markedBy,
-        createdAt: result.createdAt,
-        updatedAt: result.updatedAt,
+        createdAt: normalizeTimestamp(result.createdAt),
+        updatedAt: normalizeTimestamp(result.updatedAt),
       } as Attendance;
     }
     return null;
@@ -104,7 +111,7 @@ export async function upsertAttendanceInDB(
           $set: {
             status,
             markedBy,
-            updatedAt: new Date(),
+            updatedAt: new Date().toISOString(),
           },
         },
         { returnDocument: "after" }
@@ -117,20 +124,21 @@ export async function upsertAttendanceInDB(
           status: result.status,
           subject: result.subject,
           markedBy: result.markedBy,
-          createdAt: result.createdAt,
-          updatedAt: result.updatedAt,
+          createdAt: normalizeTimestamp(result.createdAt),
+          updatedAt: normalizeTimestamp(result.updatedAt),
         } as Attendance;
       }
     } else {
       // Insert new
+      const now = new Date().toISOString();
       const newAttendance = {
         studentId,
         date,
         status,
         subject,
         markedBy,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: now,
+        updatedAt: now,
       };
       const result = await db.collection("attendance").insertOne(newAttendance);
       return {

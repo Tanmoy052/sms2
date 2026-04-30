@@ -6,9 +6,6 @@ const nextConfig = {
   turbopack: {
     root: rootDir,
   },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
   devIndicators: false,
   images: {
     remotePatterns: [

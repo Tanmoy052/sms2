@@ -80,7 +80,7 @@ export function Combobox({
                 {allowCustom && inputValue ? (
                   <div className="p-2">
                     <p className="text-sm text-muted-foreground mb-2">
-                      "{inputValue}" not found.
+                      &quot;{inputValue}&quot; not found.
                     </p>
                     <Button
                       variant="secondary"
@@ -88,7 +88,7 @@ export function Combobox({
                       className="w-full h-8"
                       onClick={() => handleSelect(inputValue)}
                     >
-                      Use "{inputValue}"
+                      Use &quot;{inputValue}&quot;
                     </Button>
                   </div>
                 ) : (

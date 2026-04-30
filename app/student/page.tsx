@@ -128,7 +128,7 @@ export default function StudentDashboard() {
       }
     }
     checkSession();
-  }, [router]);
+  }, [router, fetchCreds]);
 
   async function handleAddNotice(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();

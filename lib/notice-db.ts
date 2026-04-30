@@ -2,15 +2,23 @@ import { connectToDatabase } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import type { Notice } from "@/lib/types";
 
+function mapNotice(doc: any): Notice {
+  return {
+    id: doc._id.toString(),
+    title: String(doc.title ?? ""),
+    content: String(doc.content ?? ""),
+    category: doc.category as Notice["category"],
+    publishedAt: String(doc.publishedAt ?? new Date().toISOString()),
+    expiresAt: doc.expiresAt ?? null,
+    isActive: Boolean(doc.isActive),
+  };
+}
+
 export async function getNoticesFromDB(): Promise<Notice[]> {
   try {
     const { db } = await connectToDatabase();
     const notices = await db.collection("notices").find({}).toArray();
-    return notices.map((item) => ({
-      ...item,
-      id: item._id.toString(),
-      _id: undefined,
-    })) as Notice[];
+    return notices.map(mapNotice);
   } catch (error) {
     console.error("Error fetching notices:", error);
     return [];
@@ -22,8 +30,6 @@ export async function addNoticeToDB(notice: Omit<Notice, "id">): Promise<Notice>
     const { db } = await connectToDatabase();
     const result = await db.collection("notices").insertOne({
       ...notice,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
     });
     return {
       ...notice,
@@ -40,15 +46,11 @@ export async function updateNoticeInDB(id: string, data: Partial<Notice>): Promi
     const { db } = await connectToDatabase();
     const result = await db.collection("notices").findOneAndUpdate(
       { _id: new ObjectId(id) },
-      { $set: { ...data, updatedAt: new Date().toISOString() } },
+      { $set: { ...data } },
       { returnDocument: "after" }
     );
     if (result) {
-      return {
-        ...result,
-        id: result._id.toString(),
-        _id: undefined,
-      } as Notice;
+      return mapNotice(result);
     }
     return null;
   } catch (error) {

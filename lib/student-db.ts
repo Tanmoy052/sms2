@@ -2,15 +2,41 @@ import { connectToDatabase } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import type { Student, StudentCredentials } from "@/lib/types";
 
+function mapStudent(doc: any): Student {
+  return {
+    id: doc._id.toString(),
+    name: String(doc.name ?? ""),
+    email: String(doc.email ?? ""),
+    rollNumber: String(doc.rollNumber ?? ""),
+    department: String(doc.department ?? ""),
+    semester: Number(doc.semester ?? 1),
+    phone: String(doc.phone ?? ""),
+    address: String(doc.address ?? ""),
+    dateOfBirth: String(doc.dateOfBirth ?? ""),
+    admissionYear: Number(doc.admissionYear ?? 0),
+    guardianName: String(doc.guardianName ?? ""),
+    guardianPhone: String(doc.guardianPhone ?? ""),
+    status: (doc.status as Student["status"]) ?? "active",
+    photo: doc.photo ? String(doc.photo) : undefined,
+    createdAt: String(doc.createdAt ?? new Date().toISOString()),
+    updatedAt: String(doc.updatedAt ?? new Date().toISOString()),
+  };
+}
+
+function mapStudentCredential(doc: any): StudentCredentials {
+  return {
+    id: doc._id.toString(),
+    studentId: String(doc.studentId ?? ""),
+    rollNumber: String(doc.rollNumber ?? ""),
+    password: String(doc.password ?? ""),
+  };
+}
+
 export async function getStudentsFromDB(): Promise<Student[]> {
   try {
     const { db } = await connectToDatabase();
     const students = await db.collection("students").find({}).toArray();
-    return students.map((item) => ({
-      ...item,
-      id: item._id.toString(),
-      _id: undefined,
-    })) as Student[];
+    return students.map(mapStudent);
   } catch (error) {
     console.error("Error fetching students:", error);
     return [];
@@ -24,11 +50,7 @@ export async function getStudentById(id: string): Promise<Student | null> {
       .collection("students")
       .findOne({ _id: new ObjectId(id) });
     if (!student) return null;
-    return {
-      ...student,
-      id: student._id.toString(),
-      _id: undefined,
-    } as Student;
+    return mapStudent(student);
   } catch (error) {
     console.error("Error fetching student:", error);
     return null;
@@ -42,11 +64,7 @@ export async function getStudentByRollNumber(
     const { db } = await connectToDatabase();
     const student = await db.collection("students").findOne({ rollNumber });
     if (!student) return null;
-    return {
-      ...student,
-      id: student._id.toString(),
-      _id: undefined,
-    } as Student;
+    return mapStudent(student);
   } catch (error) {
     console.error("Error fetching student by roll number:", error);
     return null;
@@ -59,16 +77,17 @@ export type NewStudent = Omit<Student, "id" | "createdAt" | "updatedAt">;
 export async function addStudentToDB(student: NewStudent): Promise<Student> {
   try {
     const { db } = await connectToDatabase();
+    const now = new Date().toISOString();
     const result = await db.collection("students").insertOne({
       ...student,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: now,
+      updatedAt: now,
     });
     return {
       ...student,
       id: result.insertedId.toString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: now,
+      updatedAt: now,
     } as Student;
   } catch (error) {
     console.error("Error adding student:", error);
@@ -90,11 +109,7 @@ export async function updateStudentInDB(
         { returnDocument: "after" },
       );
     if (result) {
-      return {
-        ...result,
-        id: result._id.toString(),
-        _id: undefined,
-      } as Student;
+      return mapStudent(result);
     }
     return null;
   } catch (error) {
@@ -121,11 +136,7 @@ export async function getStudentCredentials(): Promise<StudentCredentials[]> {
   try {
     const { db } = await connectToDatabase();
     const creds = await db.collection("student_credentials").find({}).toArray();
-    return creds.map((item) => ({
-      ...item,
-      id: item._id.toString(),
-      _id: undefined,
-    })) as StudentCredentials[];
+    return creds.map(mapStudentCredential);
   } catch (error) {
     console.error("Error fetching student credentials:", error);
     return [];
@@ -141,11 +152,7 @@ export async function getStudentCredentialByStudentId(
       .collection("student_credentials")
       .findOne({ studentId });
     if (!cred) return null;
-    return {
-      ...cred,
-      id: cred._id.toString(),
-      _id: undefined,
-    } as StudentCredentials;
+    return mapStudentCredential(cred);
   } catch (error) {
     console.error("Error fetching student credential:", error);
     return null;
@@ -204,11 +211,7 @@ export async function verifyStudentCredentials(
       .collection("student_credentials")
       .findOne({ rollNumber, password });
     if (!cred) return null;
-    return {
-      ...cred,
-      id: cred._id.toString(),
-      _id: undefined,
-    } as StudentCredentials;
+    return mapStudentCredential(cred);
   } catch (error) {
     console.error("Error verifying student credentials:", error);
     return null;

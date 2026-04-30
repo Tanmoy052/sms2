@@ -5,6 +5,8 @@ import { DashboardRefresh } from "@/components/admin/dashboard-refresh";
 import { UpdateAdminCredentials } from "@/components/admin/update-credentials";
 import { getAdminCredentials } from "@/lib/admin-db";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminDashboard() {
   const stats = await getDashboardStats();
   const currentAdmin = await getAdminCredentials();

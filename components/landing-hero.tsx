@@ -129,11 +129,12 @@ export function LandingHero() {
   // auto-advance every 8 seconds
   useEffect(() => {
     const id = window.setInterval(() => {
-      goToNext();
+      setPage((p) => p + 1);
+      setDirection(1);
     }, 8000);
 
     return () => window.clearInterval(id);
-  }, [page]);
+  }, []);
 
   const slideVariants = {
     enter: (direction: number) => ({

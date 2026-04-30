@@ -7,15 +7,41 @@ import {
   type TeacherCredentials,
 } from "@/lib/types";
 
+function mapTeacher(doc: any): Teacher {
+  return {
+    id: doc._id.toString(),
+    name: String(doc.name ?? ""),
+    email: String(doc.email ?? ""),
+    employeeId: String(doc.employeeId ?? ""),
+    department: String(doc.department ?? ""),
+    designation: String(doc.designation ?? ""),
+    phone: String(doc.phone ?? ""),
+    qualification: String(doc.qualification ?? ""),
+    specialization: String(doc.specialization ?? ""),
+    joiningDate: String(doc.joiningDate ?? ""),
+    status: (doc.status as Teacher["status"]) ?? "active",
+    photo: doc.photo ? String(doc.photo) : undefined,
+    username: doc.username ? String(doc.username) : undefined,
+    password: doc.password ? String(doc.password) : undefined,
+    createdAt: String(doc.createdAt ?? new Date().toISOString()),
+    updatedAt: String(doc.updatedAt ?? new Date().toISOString()),
+  };
+}
+
+function mapTeacherCredential(doc: any): TeacherCredentials {
+  return {
+    id: doc._id.toString(),
+    teacherId: String(doc.teacherId ?? ""),
+    username: String(doc.username ?? ""),
+    password: String(doc.password ?? ""),
+  };
+}
+
 export async function getTeachersFromDB(): Promise<Teacher[]> {
   try {
     const { db } = await connectToDatabase();
     const teachers = await db.collection("teachers").find({}).toArray();
-    return teachers.map((item) => ({
-      ...item,
-      id: item._id.toString(),
-      _id: undefined,
-    })) as Teacher[];
+    return teachers.map(mapTeacher);
   } catch (error) {
     console.error("Error fetching teachers:", error);
     return [];
@@ -102,11 +128,7 @@ export async function getTeacherById(id: string): Promise<Teacher | null> {
       .collection("teachers")
       .findOne({ _id: new ObjectId(id) });
     if (!teacher) return null;
-    return {
-      ...teacher,
-      id: teacher._id.toString(),
-      _id: undefined,
-    } as Teacher;
+    return mapTeacher(teacher);
   } catch (error) {
     console.error("Error fetching teacher:", error);
     return null;
@@ -118,14 +140,17 @@ export async function addTeacherToDB(
 ): Promise<Teacher> {
   try {
     const { db } = await connectToDatabase();
+    const now = new Date().toISOString();
     const result = await db.collection("teachers").insertOne({
       ...teacher,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: now,
+      updatedAt: now,
     });
     return {
       ...teacher,
       id: result.insertedId.toString(),
+      createdAt: teacher.createdAt ?? now,
+      updatedAt: teacher.updatedAt ?? now,
     };
   } catch (error) {
     console.error("Error adding teacher:", error);
@@ -147,11 +172,7 @@ export async function updateTeacherInDB(
         { returnDocument: "after" },
       );
     if (result) {
-      return {
-        ...result,
-        id: result._id.toString(),
-        _id: undefined,
-      } as Teacher;
+      return mapTeacher(result);
     }
     return null;
   } catch (error) {
@@ -178,11 +199,7 @@ export async function getTeacherCredentials(): Promise<TeacherCredentials[]> {
   try {
     const { db } = await connectToDatabase();
     const creds = await db.collection("teacher_credentials").find({}).toArray();
-    return creds.map((item) => ({
-      ...item,
-      id: item._id.toString(),
-      _id: undefined,
-    })) as TeacherCredentials[];
+    return creds.map(mapTeacherCredential);
   } catch (error) {
     console.error("Error fetching teacher credentials:", error);
     return [];
@@ -198,11 +215,7 @@ export async function getTeacherCredentialByTeacherId(
       .collection("teacher_credentials")
       .findOne({ teacherId });
     if (!cred) return null;
-    return {
-      ...cred,
-      id: cred._id.toString(),
-      _id: undefined,
-    } as TeacherCredentials;
+    return mapTeacherCredential(cred);
   } catch (error) {
     console.error("Error fetching teacher credential:", error);
     return null;
@@ -250,11 +263,7 @@ export async function verifyTeacherCredentials(
       .collection("teacher_credentials")
       .findOne({ username, password });
     if (!cred) return null;
-    return {
-      ...cred,
-      id: cred._id.toString(),
-      _id: undefined,
-    } as TeacherCredentials;
+    return mapTeacherCredential(cred);
   } catch (error) {
     console.error("Error verifying teacher credentials:", error);
     return null;
