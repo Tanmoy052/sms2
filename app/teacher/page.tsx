@@ -64,14 +64,19 @@ import {
   XCircle,
   Clock,
   Shield,
+  Search,
+  Users,
 } from "lucide-react";
 import { FileUpload } from "@/components/ui/file-upload";
-import type {
-  Teacher,
-  Student,
-  Attendance,
-  Notice,
-  Project,
+import {
+  DEPARTMENTS,
+  DEPT_SHORT_CODES,
+  type Teacher,
+  type Student,
+  type Attendance,
+  type Notice,
+  type Project,
+  type TeacherCredentials,
 } from "@/lib/types";
 import {
   generateAttendancePDF,
@@ -82,7 +87,6 @@ import { Combobox } from "@/components/ui/combobox";
 import { mutate } from "swr";
 import { formatDate } from "@/lib/utils";
 import { UpdateTeacherCredentials } from "@/components/teacher/update-credentials";
-import type { TeacherCredentials } from "@/lib/types";
 
 export default function TeacherDashboard() {
   const router = useRouter();
@@ -262,7 +266,7 @@ export default function TeacherDashboard() {
 
           <TabsContent value="attendance">
             <AttendanceTab
-              students={deptStudents}
+              students={students}
               teacherId={teacher.id}
               attendance={attendance || []}
               department={teacher.department}
@@ -446,7 +450,15 @@ function AttendanceTab({
     new Date().toISOString().split("T")[0],
   );
   const [subject, setSubject] = useState("");
+
+  // Default to teacher's department, or "all" if BSH/unspecified
+  const [selectedDepartment, setSelectedDepartment] = useState<string>(() => {
+    if (department === "Basic Science & Humanities") return "all";
+    return department || "all";
+  });
   const [selectedSemester, setSelectedSemester] = useState<string>("all");
+  const [studentSearch, setStudentSearch] = useState<string>("");
+
   const [attendanceData, setAttendanceData] = useState<
     Record<string, "present" | "absent" | null>
   >({});
@@ -463,35 +475,129 @@ function AttendanceTab({
     new Date().toISOString().split("T")[0],
   );
 
-  // Get available semesters from students
-  const availableSemesters = [...new Set(students.map((s) => s.semester))].sort(
-    (a, b) => a - b,
+  // Department options
+  const departmentOptions = useMemo(() => {
+    const baseDepts = [
+      { name: "Computer Science & Engineering", code: "CSE" },
+      { name: "Electronics & Communication Engineering", code: "ECE" },
+      { name: "Electrical Engineering", code: "EE" },
+      { name: "Mechanical Engineering", code: "ME" },
+      { name: "Civil Engineering", code: "CE" },
+    ];
+    return baseDepts;
+  }, []);
+
+  // Filter students based on department, semester, and search query
+  const filteredStudents = useMemo(() => {
+    return students
+      .filter((s) => {
+        const matchesDept =
+          selectedDepartment === "all" ||
+          s.department.trim().toLowerCase() === selectedDepartment.trim().toLowerCase();
+
+        const matchesSem =
+          selectedSemester === "all" ||
+          s.semester.toString() === selectedSemester;
+
+        const matchesSearch =
+          !studentSearch.trim() ||
+          s.name.toLowerCase().includes(studentSearch.toLowerCase().trim()) ||
+          s.rollNumber.toLowerCase().includes(studentSearch.toLowerCase().trim());
+
+        return matchesDept && matchesSem && matchesSearch;
+      })
+      .sort((a, b) => a.rollNumber.localeCompare(b.rollNumber));
+  }, [students, selectedDepartment, selectedSemester, studentSearch]);
+
+  // Calculate student counts per semester for the chosen department
+  const getSemesterCount = useCallback(
+    (sem: string) => {
+      return students.filter((s) => {
+        const matchesDept =
+          selectedDepartment === "all" ||
+          s.department.trim().toLowerCase() === selectedDepartment.trim().toLowerCase();
+        const matchesSem =
+          sem === "all" || s.semester.toString() === sem;
+        return matchesDept && matchesSem;
+      }).length;
+    },
+    [students, selectedDepartment],
   );
 
-  // Get unique subjects from attendance records
+  // Calculate count per department
+  const getDepartmentCount = useCallback(
+    (deptName: string) => {
+      if (deptName === "all") return students.length;
+      return students.filter(
+        (s) => s.department.trim().toLowerCase() === deptName.trim().toLowerCase(),
+      ).length;
+    },
+    [students],
+  );
+
+  // Unique subjects from attendance records
   const uniqueSubjects = useMemo(() => {
     const subjects = [...new Set(attendance.map((a) => a.subject))];
     return subjects.sort();
   }, [attendance]);
 
-  // Filter students by semester
-  const filteredStudents = useMemo(() => {
-    return selectedSemester === "all"
-      ? students
-      : students.filter((s) => s.semester.toString() === selectedSemester);
-  }, [students, selectedSemester]);
+  // Dynamic subjects based on chosen department
+  const activeDeptForSubjects =
+    selectedDepartment === "all" ? department : selectedDepartment;
+  const departmentSubjects =
+    SUBJECTS_BY_DEPARTMENT[activeDeptForSubjects] ||
+    SUBJECTS_BY_DEPARTMENT[department] ||
+    [];
 
-  // Filter attendance for history view - auto-load previous 1 month
+  const deptCustomSubjects = uniqueSubjects.filter((subj) => {
+    return attendance.some(
+      (a) =>
+        a.subject === subj &&
+        students.some(
+          (s) =>
+            s.id === a.studentId &&
+            (selectedDepartment === "all" ||
+              s.department.trim().toLowerCase() ===
+                selectedDepartment.trim().toLowerCase()),
+        ),
+    );
+  });
+
+  const allSubjects = [
+    ...departmentSubjects,
+    ...deptCustomSubjects.filter((s) => !departmentSubjects.includes(s)),
+  ].sort();
+
+  // Filter attendance for history view
   const filteredAttendance = useMemo(() => {
     return attendance.filter((a) => {
       const matchesSubject =
         historySubject === "all" || a.subject === historySubject;
       const matchesDate =
         a.date >= historyStartDate && a.date <= historyEndDate;
-      const studentInDept = students.some((s) => s.id === a.studentId);
-      return matchesSubject && matchesDate && studentInDept;
+      const matchingStudent = students.find((s) => s.id === a.studentId);
+      if (!matchingStudent) return false;
+
+      const matchesDept =
+        selectedDepartment === "all" ||
+        matchingStudent.department.trim().toLowerCase() ===
+          selectedDepartment.trim().toLowerCase();
+
+      const matchesSem =
+        selectedSemester === "all" ||
+        matchingStudent.semester.toString() === selectedSemester;
+
+      return matchesSubject && matchesDate && matchesDept && matchesSem;
     });
-  }, [attendance, historySubject, historyStartDate, historyEndDate, students]);
+  }, [
+    attendance,
+    historySubject,
+    historyStartDate,
+    historyEndDate,
+    students,
+    selectedDepartment,
+    selectedSemester,
+  ]);
 
   // Group attendance by date and subject for history view
   const groupedAttendance = useMemo(() => {
@@ -504,7 +610,7 @@ function AttendanceTab({
     return grouped;
   }, [filteredAttendance]);
 
-  // Initialize all filtered students with no status by default
+  // Reset or initialize attendance data map when filtered list changes
   useEffect(() => {
     const initialData: Record<string, "present" | "absent" | null> = {};
     filteredStudents.forEach((s) => {
@@ -515,7 +621,12 @@ function AttendanceTab({
 
   async function handleSaveAttendance() {
     if (!subject) {
-      alert("Please enter a subject");
+      alert("Please select or type a subject");
+      return;
+    }
+
+    if (filteredStudents.length === 0) {
+      alert("No students available to mark attendance");
       return;
     }
 
@@ -523,7 +634,7 @@ function AttendanceTab({
       (v) => v === null,
     ).length;
     if (unset > 0) {
-      alert("Please set Present/Absent for all students");
+      alert("Please set Present or Absent for all students");
       return;
     }
 
@@ -573,7 +684,7 @@ function AttendanceTab({
 
     generateAttendancePDF({
       subject: historySubject,
-      department,
+      department: selectedDepartment === "all" ? department : selectedDepartment,
       startDate: historyStartDate,
       endDate: historyEndDate,
       students:
@@ -597,34 +708,11 @@ function AttendanceTab({
     generateDateWiseAttendancePDF({
       date,
       subject: subj,
-      department,
+      department: selectedDepartment === "all" ? department : selectedDepartment,
       students: relevantStudents,
       attendance: dateAttendance,
     });
   }
-
-  // Get subjects for the department
-  const departmentSubjects = SUBJECTS_BY_DEPARTMENT[department] || [];
-
-  // Filter custom subjects to ensure they belong to this department
-  // This is done by checking if the subject was used in an attendance record
-  // associated with a student from this department
-  const deptCustomSubjects = uniqueSubjects.filter((subj) => {
-    // Check if this subject is used in any attendance record for this department's students
-    return attendance.some(
-      (a) =>
-        a.subject === subj &&
-        students.some(
-          (s) => s.id === a.studentId && s.department === department,
-        ),
-    );
-  });
-
-  // Combine department subjects with unique custom subjects from history
-  const allSubjects = [
-    ...departmentSubjects,
-    ...deptCustomSubjects.filter((s) => !departmentSubjects.includes(s)),
-  ].sort();
 
   return (
     <div className="space-y-6">
@@ -633,7 +721,7 @@ function AttendanceTab({
         value={activeSubTab}
         onValueChange={(v) => setActiveSubTab(v as "mark" | "history")}
       >
-        <TabsList>
+        <TabsList className="grid w-full max-w-md grid-cols-2">
           <TabsTrigger value="mark" className="gap-2">
             <ClipboardList className="h-4 w-4" />
             Mark Attendance
@@ -646,42 +734,159 @@ function AttendanceTab({
 
         {/* Mark Attendance Tab */}
         <TabsContent value="mark" className="mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Mark Attendance</CardTitle>
-              <CardDescription>
-                Select semester, date, subject and mark attendance
-              </CardDescription>
+          <Card className="shadow-sm border-border/60">
+            <CardHeader className="pb-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div>
+                  <CardTitle className="text-xl flex items-center gap-2">
+                    <ClipboardList className="h-5 w-5 text-primary" />
+                    Mark Attendance
+                  </CardTitle>
+                  <CardDescription>
+                    Select department, semester, subject, and record student attendance
+                  </CardDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="px-3 py-1 font-medium text-xs bg-primary/5 text-primary border-primary/20">
+                    <Users className="h-3.5 w-3.5 mr-1" />
+                    {filteredStudents.length} Students Active
+                  </Badge>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>Select Semester</Label>
-                <Tabs
-                  value={selectedSemester}
-                  onValueChange={setSelectedSemester}
-                >
-                  <TabsList className="flex-wrap h-auto gap-1">
-                    <TabsTrigger value="all">All Semesters</TabsTrigger>
-                    {availableSemesters.map((sem) => (
-                      <TabsTrigger key={sem} value={sem.toString()}>
-                        Sem {sem}
-                      </TabsTrigger>
-                    ))}
-                  </TabsList>
-                </Tabs>
+
+            <CardContent className="space-y-5">
+              {/* Department & Search Row */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 rounded-xl bg-muted/40 border border-border/40">
+                <div className="space-y-2 md:col-span-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                      <Building className="h-3.5 w-3.5 text-primary" />
+                      Department
+                    </Label>
+                    {department && selectedDepartment !== department && (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedDepartment(department)}
+                        className="text-xs text-primary hover:underline font-medium"
+                      >
+                        Reset to My Dept ({DEPT_SHORT_CODES[department] || "My"})
+                      </button>
+                    )}
+                  </div>
+                  <Select
+                    value={selectedDepartment}
+                    onValueChange={setSelectedDepartment}
+                  >
+                    <SelectTrigger className="w-full bg-background font-medium">
+                      <SelectValue placeholder="Select Department" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">
+                        🌐 All Departments ({getDepartmentCount("all")} students)
+                      </SelectItem>
+                      {departmentOptions.map((dept) => (
+                        <SelectItem key={dept.name} value={dept.name}>
+                          {dept.name} ({dept.code}) — {getDepartmentCount(dept.name)} students
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                    <Search className="h-3.5 w-3.5 text-primary" />
+                    Search Student
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      placeholder="Name or Roll Number..."
+                      value={studentSearch}
+                      onChange={(e) => setStudentSearch(e.target.value)}
+                      className="bg-background pr-8"
+                    />
+                    {studentSearch && (
+                      <button
+                        onClick={() => setStudentSearch("")}
+                        className="absolute right-2.5 top-2.5 text-xs text-muted-foreground hover:text-foreground"
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
 
+              {/* Semester Selector Tabs */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                    <GraduationCap className="h-3.5 w-3.5 text-primary" />
+                    Select Semester
+                  </Label>
+                  <span className="text-xs text-muted-foreground">
+                    Filtered: {filteredStudents.length} students
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-1.5 p-1.5 bg-muted/50 rounded-lg border border-border/40">
+                  <Button
+                    type="button"
+                    variant={selectedSemester === "all" ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setSelectedSemester("all")}
+                    className="h-8 text-xs font-medium gap-1.5"
+                  >
+                    All Semesters
+                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                      selectedSemester === "all" ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted-foreground/15 text-muted-foreground"
+                    }`}>
+                      {getSemesterCount("all")}
+                    </span>
+                  </Button>
+                  {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => {
+                    const count = getSemesterCount(sem.toString());
+                    const isSelected = selectedSemester === sem.toString();
+                    return (
+                      <Button
+                        key={sem}
+                        type="button"
+                        variant={isSelected ? "default" : "ghost"}
+                        size="sm"
+                        onClick={() => setSelectedSemester(sem.toString())}
+                        className="h-8 text-xs font-medium gap-1.5"
+                      >
+                        Sem {sem}
+                        <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                          isSelected ? "bg-primary-foreground/20 text-primary-foreground" : count > 0 ? "bg-primary/15 text-primary" : "bg-muted-foreground/10 text-muted-foreground"
+                        }`}>
+                          {count}
+                        </span>
+                      </Button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Date & Subject Controls */}
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Date</Label>
+                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                    <Calendar className="h-3.5 w-3.5 text-primary" />
+                    Date
+                  </Label>
                   <Input
                     type="date"
                     value={selectedDate}
                     onChange={(e) => setSelectedDate(e.target.value)}
+                    className="bg-background"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Subject</Label>
+                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                    <BookOpen className="h-3.5 w-3.5 text-primary" />
+                    Subject
+                  </Label>
                   <Combobox
                     items={allSubjects}
                     value={subject}
@@ -693,120 +898,166 @@ function AttendanceTab({
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-                <div className="flex gap-2">
+              {/* Quick Actions Header */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pt-2 border-t border-border/40">
+                <div className="flex items-center gap-2">
                   <Button
+                    type="button"
                     variant="outline"
                     size="sm"
                     onClick={() => markAll("present")}
-                    className="gap-1"
+                    disabled={filteredStudents.length === 0}
+                    className="gap-1.5 text-xs text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50 border-emerald-300 dark:text-emerald-400 dark:hover:bg-emerald-950/30"
                   >
-                    <CheckCircle className="h-4 w-4" /> Present All
+                    <CheckCircle className="h-3.5 w-3.5" /> Present All
                   </Button>
                   <Button
+                    type="button"
                     variant="outline"
                     size="sm"
                     onClick={() => markAll("absent")}
-                    className="gap-1"
+                    disabled={filteredStudents.length === 0}
+                    className="gap-1.5 text-xs text-rose-700 hover:text-rose-800 hover:bg-rose-50 border-rose-300 dark:text-rose-400 dark:hover:bg-rose-950/30"
                   >
-                    <XCircle className="h-4 w-4" /> Absent All
+                    <XCircle className="h-3.5 w-3.5" /> Absent All
                   </Button>
                 </div>
-                <span className="text-xs text-muted-foreground">
-                  {Object.values(attendanceData).some((v) => v === null)
-                    ? "Not all students marked"
-                    : ""}
-                </span>
+                <div className="flex items-center gap-3 text-xs">
+                  <span className="text-muted-foreground">
+                    Marked:{" "}
+                    <strong className="text-foreground">
+                      {Object.values(attendanceData).filter((v) => v !== null).length}
+                    </strong>{" "}
+                    / {filteredStudents.length}
+                  </span>
+                  {Object.values(attendanceData).some((v) => v === null) && filteredStudents.length > 0 && (
+                    <span className="text-amber-600 dark:text-amber-400 font-medium">
+                      (Pending entries)
+                    </span>
+                  )}
+                </div>
               </div>
 
-              <div className="bg-background rounded-lg border border-border/40 divide-y divide-border/40 max-h-96 overflow-y-auto">
-                {filteredStudents.map((student, index) => (
-                  <div
-                    key={student.id}
-                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 hover:bg-muted/50 gap-3"
-                  >
-                    <div className="flex items-center gap-3 w-full sm:w-auto">
-                      <span className="text-sm text-muted-foreground w-6 flex-shrink-0">
-                        {index + 1}.
-                      </span>
-                      <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center overflow-hidden flex-shrink-0">
-                        {student.photo ? (
-                          <Image
-                            src={student.photo || "/placeholder.svg"}
-                            alt={student.name}
-                            width={32}
-                            height={32}
-                            className="object-cover"
-                          />
-                        ) : (
-                          <User className="h-4 w-4 text-green-600" />
-                        )}
+              {/* Student Cards List */}
+              <div className="bg-background rounded-xl border border-border/60 divide-y divide-border/40 max-h-[420px] overflow-y-auto shadow-inner">
+                {filteredStudents.map((student, index) => {
+                  const currentStatus = attendanceData[student.id];
+                  const deptShort =
+                    DEPT_SHORT_CODES[student.department] ||
+                    student.department.split(" ")[0];
+
+                  return (
+                    <div
+                      key={student.id}
+                      className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-3.5 hover:bg-muted/40 transition-colors gap-3 ${
+                        currentStatus === "present"
+                          ? "bg-emerald-500/5"
+                          : currentStatus === "absent"
+                          ? "bg-rose-500/5"
+                          : ""
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 w-full sm:w-auto">
+                        <span className="text-xs font-mono text-muted-foreground w-6 flex-shrink-0 text-center font-semibold">
+                          {index + 1}.
+                        </span>
+                        <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden flex-shrink-0 border border-primary/20">
+                          {student.photo ? (
+                            <Image
+                              src={student.photo || "/placeholder.svg"}
+                              alt={student.name}
+                              width={36}
+                              height={36}
+                              className="object-cover"
+                            />
+                          ) : (
+                            <User className="h-4 w-4 text-primary" />
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-semibold text-sm truncate max-w-[200px] sm:max-w-none">
+                            {student.name}
+                          </p>
+                          <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
+                            <span className="font-mono bg-muted px-1.5 py-0.2 rounded text-[11px] font-medium text-foreground">
+                              {student.rollNumber}
+                            </span>
+                            <Badge variant="outline" className="text-[10px] px-1 py-0 border-border">
+                              {deptShort}
+                            </Badge>
+                            <Badge variant="secondary" className="text-[10px] px-1 py-0">
+                              Sem {student.semester}
+                            </Badge>
+                          </div>
+                        </div>
                       </div>
-                      <div className="min-w-0">
-                        <p className="font-medium text-sm truncate max-w-[150px] sm:max-w-none">
-                          {student.name}
-                        </p>
-                        <p className="text-xs text-muted-foreground truncate">
-                          <span className="font-mono">
-                            {student.rollNumber}
-                          </span>
-                          <span className="ml-2">Sem {student.semester}</span>
-                        </p>
+
+                      <div className="flex items-center gap-2 w-full sm:w-auto justify-end sm:justify-start">
+                        <Button
+                          type="button"
+                          variant={currentStatus === "present" ? "default" : "outline"}
+                          size="sm"
+                          className={`h-8 gap-1 text-xs font-medium flex-shrink-0 ${
+                            currentStatus === "present"
+                              ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                              : "hover:border-emerald-400 hover:text-emerald-700"
+                          }`}
+                          onClick={() =>
+                            setAttendanceData((prev) => ({
+                              ...prev,
+                              [student.id]: "present",
+                            }))
+                          }
+                        >
+                          <CheckCircle className="h-3.5 w-3.5" /> Present
+                        </Button>
+                        <Button
+                          type="button"
+                          variant={currentStatus === "absent" ? "default" : "outline"}
+                          size="sm"
+                          className={`h-8 gap-1 text-xs font-medium flex-shrink-0 ${
+                            currentStatus === "absent"
+                              ? "bg-rose-600 hover:bg-rose-700 text-white"
+                              : "hover:border-rose-400 hover:text-rose-700"
+                          }`}
+                          onClick={() =>
+                            setAttendanceData((prev) => ({
+                              ...prev,
+                              [student.id]: "absent",
+                            }))
+                          }
+                        >
+                          <XCircle className="h-3.5 w-3.5" /> Absent
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 w-full sm:w-auto justify-end sm:justify-start overflow-x-auto">
-                      <Button
-                        variant={
-                          attendanceData[student.id] === "present"
-                            ? "default"
-                            : "outline"
-                        }
-                        size="sm"
-                        className="gap-1 flex-shrink-0"
-                        onClick={() =>
-                          setAttendanceData((prev) => ({
-                            ...prev,
-                            [student.id]: "present",
-                          }))
-                        }
-                      >
-                        <CheckCircle className="h-4 w-4" /> Present
-                      </Button>
-                      <Button
-                        variant={
-                          attendanceData[student.id] === "absent"
-                            ? "default"
-                            : "outline"
-                        }
-                        size="sm"
-                        className="gap-1 flex-shrink-0"
-                        onClick={() =>
-                          setAttendanceData((prev) => ({
-                            ...prev,
-                            [student.id]: "absent",
-                          }))
-                        }
-                      >
-                        <XCircle className="h-4 w-4" /> Absent
-                      </Button>
-                      <span className="text-xs text-muted-foreground whitespace-nowrap min-w-[45px] text-right">
-                        {attendanceData[student.id] === null
-                          ? "Not set"
-                          : attendanceData[student.id]}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
+
                 {filteredStudents.length === 0 && (
-                  <p className="text-center py-8 text-muted-foreground">
-                    No students in selected semester
-                  </p>
+                  <div className="text-center py-12 px-4 space-y-2">
+                    <p className="font-medium text-sm text-foreground">
+                      No students found
+                    </p>
+                    <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                      No students match department{" "}
+                      <strong>
+                        {selectedDepartment === "all" ? "All Departments" : selectedDepartment}
+                      </strong>{" "}
+                      and{" "}
+                      <strong>
+                        {selectedSemester === "all" ? "All Semesters" : `Semester ${selectedSemester}`}
+                      </strong>
+                      . Try selecting a different semester or department above.
+                    </p>
+                  </div>
                 )}
               </div>
 
+              {/* Save Attendance Button */}
               <Button
                 onClick={handleSaveAttendance}
-                className="w-full gap-2"
+                className="w-full gap-2 font-medium shadow-sm py-5 text-sm"
                 disabled={
                   isSaving ||
                   filteredStudents.length === 0 ||
@@ -815,8 +1066,8 @@ function AttendanceTab({
               >
                 <Save className="h-4 w-4" />
                 {isSaving
-                  ? "Saving..."
-                  : `Save Attendance (${filteredStudents.length} students)`}
+                  ? "Saving attendance records..."
+                  : `Save Attendance for ${filteredStudents.length} Students`}
               </Button>
             </CardContent>
           </Card>
@@ -825,56 +1076,101 @@ function AttendanceTab({
         {/* Attendance History Tab */}
         <TabsContent value="history" className="mt-4 space-y-4">
           {/* Filters Card */}
-          <Card>
+          <Card className="shadow-sm border-border/60">
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
-                <Filter className="h-4 w-4" />
+                <Filter className="h-4 w-4 text-primary" />
                 Filter Attendance Records
               </CardTitle>
               <CardDescription>
-                Previous 1 month data is automatically loaded
+                Filter records by department, semester, subject, and date range
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid sm:grid-cols-4 gap-4">
-                <div className="space-y-2">
-                  <Label>Subject</Label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Department</Label>
+                  <Select
+                    value={selectedDepartment}
+                    onValueChange={setSelectedDepartment}
+                  >
+                    <SelectTrigger className="bg-background text-xs">
+                      <SelectValue placeholder="Department" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Departments</SelectItem>
+                      {departmentOptions.map((dept) => (
+                        <SelectItem key={dept.name} value={dept.name}>
+                          {dept.code}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Semester</Label>
+                  <Select
+                    value={selectedSemester}
+                    onValueChange={setSelectedSemester}
+                  >
+                    <SelectTrigger className="bg-background text-xs">
+                      <SelectValue placeholder="Semester" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Semesters</SelectItem>
+                      {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
+                        <SelectItem key={sem} value={sem.toString()}>
+                          Semester {sem}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Subject</Label>
                   <Combobox
                     items={allSubjects}
                     value={historySubject === "all" ? "" : historySubject}
                     onChange={(val) => setHistorySubject(val || "all")}
                     placeholder="All Subjects"
-                    allowCustom={false} // Only filtering existing records
+                    allowCustom={false}
                     emptyText="No records found"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>Start Date</Label>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Start Date</Label>
                   <Input
                     type="date"
                     value={historyStartDate}
                     onChange={(e) => setHistoryStartDate(e.target.value)}
+                    className="bg-background text-xs"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>End Date</Label>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">End Date</Label>
                   <Input
                     type="date"
                     value={historyEndDate}
                     onChange={(e) => setHistoryEndDate(e.target.value)}
+                    className="bg-background text-xs"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>&nbsp;</Label>
-                  <Button
-                    onClick={handleDownloadSubjectReport}
-                    className="w-full gap-2"
-                    disabled={historySubject === "all"}
-                  >
-                    <Download className="h-4 w-4" />
-                    Download PDF
-                  </Button>
-                </div>
+              </div>
+
+              <div className="mt-4 pt-3 border-t border-border/40 flex justify-end">
+                <Button
+                  onClick={handleDownloadSubjectReport}
+                  size="sm"
+                  className="gap-2 text-xs"
+                  disabled={historySubject === "all"}
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  Download Subject PDF ({historySubject === "all" ? "Select Subject First" : historySubject})
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -882,7 +1178,7 @@ function AttendanceTab({
           {/* Subject-wise Summary */}
           {historySubject !== "all" && (
             <Card>
-              <CardHeader>
+              <CardHeader className="pb-3">
                 <CardTitle className="text-base">
                   Subject Summary: {historySubject}
                 </CardTitle>
@@ -891,7 +1187,7 @@ function AttendanceTab({
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3 max-h-96 overflow-y-auto">
+                <div className="space-y-2.5 max-h-96 overflow-y-auto">
                   {filteredStudents.map((student) => {
                     const studentAttendance = filteredAttendance.filter(
                       (a) =>
@@ -908,51 +1204,57 @@ function AttendanceTab({
                     return (
                       <div
                         key={student.id}
-                        className="flex items-center justify-between p-3 border border-border/40 rounded-lg"
+                        className="flex items-center justify-between p-3 border border-border/40 rounded-lg hover:bg-muted/30 transition-colors"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center overflow-hidden">
+                          <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden border border-primary/20">
                             {student.photo ? (
                               <Image
                                 src={student.photo || "/placeholder.svg"}
                                 alt={student.name}
-                                width={40}
-                                height={40}
+                                width={36}
+                                height={36}
                                 className="object-cover"
                               />
                             ) : (
-                              <User className="h-5 w-5 text-green-600" />
+                              <User className="h-4 w-4 text-primary" />
                             )}
                           </div>
                           <div>
-                            <p className="font-medium text-sm">
+                            <p className="font-semibold text-sm">
                               {student.name}
                             </p>
-                            <p className="text-xs text-muted-foreground">
-                              <span className="font-mono">
+                            <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                              <span className="font-mono font-medium">
                                 {student.rollNumber}
                               </span>
-                              <span className="ml-2">
-                                Sem {student.semester}
-                              </span>
+                              <span>•</span>
+                              <span>Sem {student.semester}</span>
                             </p>
                           </div>
                         </div>
                         <div className="text-right">
                           <p
-                            className={`font-semibold ${
-                              percent >= 75 ? "text-green-600" : "text-red-600"
+                            className={`font-bold text-sm ${
+                              percent >= 75
+                                ? "text-emerald-600 dark:text-emerald-400"
+                                : "text-rose-600 dark:text-rose-400"
                             }`}
                           >
                             {percent}%
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {presentCount}/{total} classes
+                            {presentCount} / {total} classes
                           </p>
                         </div>
                       </div>
                     );
                   })}
+                  {filteredStudents.length === 0 && (
+                    <p className="text-center py-6 text-xs text-muted-foreground">
+                      No students found for this subject and filter criteria.
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -960,29 +1262,27 @@ function AttendanceTab({
 
           {/* Date-wise Records */}
           <Card>
-            <CardHeader>
+            <CardHeader className="pb-3">
               <CardTitle className="text-base">
                 Date-wise Attendance Records
               </CardTitle>
               <CardDescription>
-                {Object.keys(groupedAttendance).length} days of records found
+                {Object.keys(groupedAttendance).length} recorded days found
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4 max-h-[500px] overflow-y-auto">
+              <div className="space-y-3 max-h-[500px] overflow-y-auto">
                 {Object.entries(groupedAttendance)
                   .sort(([a], [b]) => b.localeCompare(a))
                   .map(([date, subjects]) => (
                     <div
                       key={date}
-                      className="border border-border/40 rounded-lg p-4"
+                      className="border border-border/40 rounded-xl p-3.5 bg-background shadow-xs"
                     >
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium">
-                            {formatDate(date)}
-                          </span>
+                      <div className="flex items-center justify-between mb-2.5">
+                        <div className="flex items-center gap-2 text-xs font-semibold">
+                          <Calendar className="h-3.5 w-3.5 text-primary" />
+                          <span>{formatDate(date)}</span>
                         </div>
                       </div>
                       <div className="space-y-2">
@@ -996,24 +1296,24 @@ function AttendanceTab({
                           return (
                             <div
                               key={subj}
-                              className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-muted/50 rounded-lg gap-2"
+                              className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-2.5 bg-muted/40 rounded-lg gap-2 text-xs"
                             >
                               <div className="flex items-center gap-2">
-                                <BookOpen className="h-4 w-4 text-blue-600 flex-shrink-0" />
-                                <span className="text-sm font-medium break-words">
+                                <BookOpen className="h-3.5 w-3.5 text-primary flex-shrink-0" />
+                                <span className="font-medium text-foreground">
                                   {subj}
                                 </span>
                               </div>
                               <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end sm:justify-start">
                                 <Badge
                                   variant="outline"
-                                  className="text-green-600 border-green-200"
+                                  className="text-emerald-700 bg-emerald-50 border-emerald-300 dark:text-emerald-400 dark:bg-emerald-950/30 text-[11px]"
                                 >
                                   {presentCount} Present
                                 </Badge>
                                 <Badge
                                   variant="outline"
-                                  className="text-red-600 border-red-200"
+                                  className="text-rose-700 bg-rose-50 border-rose-300 dark:text-rose-400 dark:bg-rose-950/30 text-[11px]"
                                 >
                                   {absentCount} Absent
                                 </Badge>
@@ -1023,9 +1323,9 @@ function AttendanceTab({
                                   onClick={() =>
                                     handleDownloadDateReport(date, subj)
                                   }
-                                  className="gap-1 ml-auto sm:ml-0"
+                                  className="gap-1 h-7 text-xs ml-auto sm:ml-0"
                                 >
-                                  <FileText className="h-4 w-4" />
+                                  <FileText className="h-3.5 w-3.5" />
                                   PDF
                                 </Button>
                               </div>
@@ -1036,7 +1336,7 @@ function AttendanceTab({
                     </div>
                   ))}
                 {Object.keys(groupedAttendance).length === 0 && (
-                  <p className="text-center py-8 text-muted-foreground">
+                  <p className="text-center py-8 text-xs text-muted-foreground">
                     No attendance records found for the selected filters
                   </p>
                 )}

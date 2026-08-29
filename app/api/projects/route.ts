@@ -3,6 +3,7 @@ import { getProjectsFromDB, addProjectToDB } from "@/lib/project-db";
 import { z } from "zod";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 const ProjectCreateSchema = z.object({
   title: z.string().min(1),

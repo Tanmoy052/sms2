@@ -1,6 +1,9 @@
 node_modules/
 .next/
 .pnpm/
+.env
+.env*.local
 .env.local
 next-env.d.ts
 tsconfig.tsbuildinfo
+

@@ -3,6 +3,7 @@ import { getNoticesFromDB, addNoticeToDB } from "@/lib/notice-db";
 import { z } from "zod";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 const NoticeCreateSchema = z.object({
   title: z.string().min(1),

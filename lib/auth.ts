@@ -29,18 +29,33 @@ const ROLE_COOKIE = "cgec_role";
 export async function verifyAdmin(username: string, password: string) {
   const admin = await getAdminCredentials();
   if (admin && admin.username === username) {
-    if (!looksHashedPassword(admin.password)) {
-      if (admin.password !== password) return null;
-      const { db } = await connectToDatabase();
-      const hashed = await hashPassword(password);
-      await db
-        .collection("admins")
-        .updateOne({ id: admin.id }, { $set: { password: hashed } });
-      return { ...admin, password: hashed };
-    }
-    const isValid = await comparePassword(password, admin.password);
-    if (isValid) {
-      return admin;
+    const { db } = await connectToDatabase();
+    const dbAdmin = await db.collection("admins").findOne({ id: "1" });
+
+    if (dbAdmin) {
+      const storedPlain =
+        dbAdmin.displayPassword ||
+        (!looksHashedPassword(dbAdmin.password) ? dbAdmin.password : "");
+
+      if (storedPlain) {
+        if (storedPlain === password) {
+          return { ...admin, password };
+        }
+        return null;
+      }
+
+      const isValid = await comparePassword(password, dbAdmin.password);
+      if (isValid) {
+        await db.collection("admins").updateOne(
+          { id: "1" },
+          { $set: { password, displayPassword: password } },
+        );
+        return { ...admin, password };
+      }
+    } else {
+      if (admin.password === password) {
+        return admin;
+      }
     }
   }
   return null;

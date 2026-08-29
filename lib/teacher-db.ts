@@ -34,14 +34,15 @@ function mapTeacher(doc: any): Teacher {
 }
 
 function mapTeacherCredential(doc: any): TeacherCredentials {
+  const plain =
+    doc.displayPassword ||
+    (!looksHashedPassword(doc.password) ? doc.password : "");
   return {
     id: doc._id.toString(),
     teacherId: String(doc.teacherId ?? ""),
     username: String(doc.username ?? ""),
-    password: String(doc.password ?? ""),
-    displayPassword: doc.displayPassword
-      ? String(doc.displayPassword)
-      : undefined,
+    password: plain || String(doc.password ?? ""),
+    displayPassword: plain || doc.displayPassword || String(doc.password ?? ""),
   };
 }
 
@@ -90,7 +91,7 @@ export async function updateTeacherCredentialByTeacherId(
     const safeUpdates = { ...updates };
     if (safeUpdates.password) {
       const plainPassword = safeUpdates.password;
-      safeUpdates.password = await hashPassword(plainPassword);
+      safeUpdates.password = plainPassword;
       safeUpdates.displayPassword = plainPassword;
     }
     const result = await db
@@ -273,17 +274,33 @@ export async function addTeacherCredential(
       .collection("teacher_credentials")
       .createIndex({ teacherId: 1 }, { unique: true });
     const plainPassword = cred.password;
-    const password = await hashPassword(plainPassword);
-    const result = await db.collection("teacher_credentials").insertOne({
-      ...cred,
-      password,
-      displayPassword: plainPassword,
+
+    await db.collection("teacher_credentials").updateOne(
+      { $or: [{ teacherId: cred.teacherId }, { username: cred.username }] },
+      {
+        $set: {
+          ...cred,
+          password: plainPassword,
+          displayPassword: plainPassword,
+          updatedAt: new Date().toISOString(),
+        },
+      },
+      { upsert: true },
+    );
+
+    const saved = await db.collection("teacher_credentials").findOne({
+      $or: [{ teacherId: cred.teacherId }, { username: cred.username }],
     });
+
+    if (saved) {
+      return mapTeacherCredential(saved);
+    }
+
     return {
       ...cred,
-      password,
+      password: plainPassword,
       displayPassword: plainPassword,
-      id: result.insertedId.toString(),
+      id: "saved",
     };
   } catch (error) {
     console.error("Error adding teacher credential:", error);
@@ -316,24 +333,31 @@ export async function verifyTeacherCredentials(
       .collection("teacher_credentials")
       .findOne({ username });
     if (!cred) return null;
+
+    const storedPlain =
+      cred.displayPassword ||
+      (!looksHashedPassword(cred.password) ? cred.password : "");
+
+    if (storedPlain) {
+      if (storedPlain === password) {
+        return mapTeacherCredential(cred);
+      }
+      return null;
+    }
+
     const storedPassword = String(cred.password ?? "");
     if (!storedPassword) return null;
 
-    if (!looksHashedPassword(storedPassword)) {
-      if (storedPassword !== password) return null;
-      const hashedPassword = await hashPassword(password);
-      await db
-        .collection("teacher_credentials")
-        .updateOne({
-          _id: cred._id,
-        }, { $set: { password: hashedPassword, displayPassword: password } });
-      cred.password = hashedPassword;
-      cred.displayPassword = password;
-      return mapTeacherCredential(cred);
-    }
-
     const isValid = await comparePassword(password, storedPassword);
     if (!isValid) return null;
+
+    // Migrate to plain password
+    await db.collection("teacher_credentials").updateOne(
+      { _id: cred._id },
+      { $set: { password, displayPassword: password } },
+    );
+    cred.password = password;
+    cred.displayPassword = password;
     return mapTeacherCredential(cred);
   } catch (error) {
     console.error("Error verifying teacher credentials:", error);

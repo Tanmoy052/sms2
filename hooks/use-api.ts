@@ -9,9 +9,15 @@ import type {
   Attendance,
 } from "@/lib/types";
 
-// Generic fetcher for API calls
+// Generic fetcher for API calls with strict no-cache headers for cross-device sync
 const fetcher = async (url: string) => {
-  const response = await fetch(url);
+  const response = await fetch(url, {
+    cache: "no-store",
+    headers: {
+      "Cache-Control": "no-cache, no-store, must-revalidate",
+      Pragma: "no-cache",
+    },
+  });
   if (!response.ok) throw new Error("Failed to fetch data");
   return response.json();
 };
@@ -22,16 +28,19 @@ const noticesFetcher = () => fetcher("/api/notices");
 const projectsFetcher = () => fetcher("/api/projects");
 const attendanceFetcher = () => fetcher("/api/attendance");
 
+const SWR_LIVE_CONFIG = {
+  revalidateOnFocus: true,
+  revalidateOnReconnect: true,
+  revalidateIfStale: true,
+  refreshInterval: 3000,
+  dedupingInterval: 1000,
+};
+
 export function useStudents() {
   const { data, error, isLoading, mutate } = useSWR<Student[]>(
     "students",
     studentsFetcher,
-    {
-      revalidateOnFocus: true,
-      revalidateOnReconnect: true,
-      refreshInterval: 5000,
-      dedupingInterval: 2000,
-    },
+    SWR_LIVE_CONFIG,
   );
 
   return {
@@ -78,12 +87,7 @@ export function useTeachers() {
   const { data, error, isLoading, mutate } = useSWR<Teacher[]>(
     "teachers",
     teachersFetcher,
-    {
-      revalidateOnFocus: true,
-      revalidateOnReconnect: true,
-      refreshInterval: 5000,
-      dedupingInterval: 2000,
-    },
+    SWR_LIVE_CONFIG,
   );
 
   return {
@@ -130,12 +134,7 @@ export function useNotices() {
   const { data, error, isLoading, mutate } = useSWR<Notice[]>(
     "notices",
     noticesFetcher,
-    {
-      revalidateOnFocus: true,
-      revalidateOnReconnect: true,
-      refreshInterval: 5000,
-      dedupingInterval: 2000,
-    },
+    SWR_LIVE_CONFIG,
   );
 
   return {
@@ -180,12 +179,7 @@ export function useProjects() {
   const { data, error, isLoading, mutate } = useSWR<Project[]>(
     "projects",
     projectsFetcher,
-    {
-      revalidateOnFocus: true,
-      revalidateOnReconnect: true,
-      refreshInterval: 5000,
-      dedupingInterval: 2000,
-    },
+    SWR_LIVE_CONFIG,
   );
 
   return {
@@ -230,12 +224,7 @@ export function useAttendance() {
   const { data, error, isLoading, mutate } = useSWR<Attendance[]>(
     "attendance",
     attendanceFetcher,
-    {
-      revalidateOnFocus: true,
-      revalidateOnReconnect: true,
-      refreshInterval: 5000,
-      dedupingInterval: 2000,
-    },
+    SWR_LIVE_CONFIG,
   );
 
   return {

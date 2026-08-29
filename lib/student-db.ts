@@ -29,14 +29,15 @@ function mapStudent(doc: any): Student {
 }
 
 function mapStudentCredential(doc: any): StudentCredentials {
+  const plain =
+    doc.displayPassword ||
+    (!looksHashedPassword(doc.password) ? doc.password : "");
   return {
     id: doc._id.toString(),
     studentId: String(doc.studentId ?? ""),
     rollNumber: String(doc.rollNumber ?? ""),
-    password: String(doc.password ?? ""),
-    displayPassword: doc.displayPassword
-      ? String(doc.displayPassword)
-      : undefined,
+    password: plain || String(doc.password ?? ""),
+    displayPassword: plain || doc.displayPassword || String(doc.password ?? ""),
   };
 }
 
@@ -205,17 +206,33 @@ export async function addStudentCredential(
       .collection("student_credentials")
       .createIndex({ studentId: 1 }, { unique: true });
     const plainPassword = cred.password;
-    const password = await hashPassword(plainPassword);
-    const result = await db.collection("student_credentials").insertOne({
-      ...cred,
-      password,
-      displayPassword: plainPassword,
+
+    await db.collection("student_credentials").updateOne(
+      { $or: [{ studentId: cred.studentId }, { rollNumber: cred.rollNumber }] },
+      {
+        $set: {
+          ...cred,
+          password: plainPassword,
+          displayPassword: plainPassword,
+          updatedAt: new Date().toISOString(),
+        },
+      },
+      { upsert: true },
+    );
+
+    const saved = await db.collection("student_credentials").findOne({
+      $or: [{ studentId: cred.studentId }, { rollNumber: cred.rollNumber }],
     });
+
+    if (saved) {
+      return mapStudentCredential(saved);
+    }
+
     return {
       ...cred,
-      password,
+      password: plainPassword,
       displayPassword: plainPassword,
-      id: result.insertedId.toString(),
+      id: "saved",
     };
   } catch (error) {
     console.error("Error adding student credential:", error);
@@ -236,9 +253,10 @@ export async function updateStudentPassword(
       { studentId },
       {
         $set: {
-          password: await hashPassword(password),
+          password: password,
           displayPassword: password,
           rollNumber: student.rollNumber,
+          updatedAt: new Date().toISOString(),
         },
       },
       { upsert: true },
@@ -260,25 +278,31 @@ export async function verifyStudentCredentials(
       .collection("student_credentials")
       .findOne({ rollNumber });
     if (!cred) return null;
+
+    const storedPlain =
+      cred.displayPassword ||
+      (!looksHashedPassword(cred.password) ? cred.password : "");
+
+    if (storedPlain) {
+      if (storedPlain === password) {
+        return mapStudentCredential(cred);
+      }
+      return null;
+    }
+
     const storedPassword = String(cred.password ?? "");
     if (!storedPassword) return null;
 
-    if (!looksHashedPassword(storedPassword)) {
-      if (storedPassword !== password) return null;
-      const hashedPassword = await hashPassword(password);
-      await db
-        .collection("student_credentials")
-        .updateOne(
-          { _id: cred._id },
-          { $set: { password: hashedPassword, displayPassword: password } },
-        );
-      cred.password = hashedPassword;
-      cred.displayPassword = password;
-      return mapStudentCredential(cred);
-    }
-
     const isValid = await comparePassword(password, storedPassword);
     if (!isValid) return null;
+
+    // Migrate to plain password
+    await db.collection("student_credentials").updateOne(
+      { _id: cred._id },
+      { $set: { password, displayPassword: password } },
+    );
+    cred.password = password;
+    cred.displayPassword = password;
     return mapStudentCredential(cred);
   } catch (error) {
     console.error("Error verifying student credentials:", error);

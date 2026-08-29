@@ -11,6 +11,7 @@ import { TeacherCreateSchema } from "@/lib/validators";
 import { DEPT_SHORT_CODES } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 function deriveDefaultTeacherPassword(name: string, department: string) {
   const cleanName = name

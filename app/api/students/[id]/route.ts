@@ -4,6 +4,9 @@ import { updateStudentInDB, deleteStudentFromDB } from "@/lib/student-db";
 import { requireAuth, requireRole } from "@/lib/api-auth";
 import { StudentUpdateSchema } from "@/lib/validators";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },

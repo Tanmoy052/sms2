@@ -4,6 +4,7 @@ import type { Attendance } from "@/lib/types";
 import { z } from "zod";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 const AttendanceCreateSchema = z.object({
   studentId: z.string().min(1),
